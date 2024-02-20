@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Test;
 
 import com.apicatalog.rdf.Rdf;
 import com.apicatalog.rdf.RdfResource;
-import com.apicatalog.rdf.canon.Permutator;
 
 /**
  * @author Simon Greatrix on 06/10/2020.

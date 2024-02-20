@@ -11,7 +11,6 @@ import com.apicatalog.jsonld.http.media.MediaType;
 import com.apicatalog.rdf.Rdf;
 import com.apicatalog.rdf.RdfDataset;
 import com.apicatalog.rdf.RdfNQuad;
-import com.apicatalog.rdf.canon.RdfCanonicalizer;
 
 /**
  * A test-suite is defined at:

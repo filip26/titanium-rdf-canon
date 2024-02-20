@@ -9,7 +9,6 @@ import com.apicatalog.rdf.Rdf;
 import com.apicatalog.rdf.RdfNQuad;
 import com.apicatalog.rdf.RdfResource;
 import com.apicatalog.rdf.RdfTriple;
-import com.apicatalog.rdf.canon.RdfCanonicalizer;
 
 /**
  * Shows how the normalization algorithm becomes impractical in the presence of
