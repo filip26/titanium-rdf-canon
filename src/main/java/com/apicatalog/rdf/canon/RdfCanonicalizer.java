@@ -67,6 +67,18 @@ public class RdfCanonicalizer {
         this.sha256 = sha256;
     }
 
+    public static RdfCanonicalizer newInstance(Collection<RdfNQuad> nquads) {
+        try {
+            return new RdfCanonicalizer(
+                    nquads,
+                    MessageDigest.getInstance("SHA-256"));
+        } catch (NoSuchAlgorithmException e) {
+            // The Java specification requires SHA-256 is included, so this should never
+            // happen.
+            throw new InternalError("SHA-256 is not available", e);
+        }        
+    }
+    
     /**
      * Normalize an RDF dataset using the URDNA 2015 algorithm.
      *
@@ -75,15 +87,7 @@ public class RdfCanonicalizer {
      * @return a new normalized equivalent dataset.
      */
     public static Collection<RdfNQuad> canonicalize(Collection<RdfNQuad> nquads) {
-        try {
-            return new RdfCanonicalizer(
-                    nquads,
-                    MessageDigest.getInstance("SHA-256")).canonicalize();
-        } catch (NoSuchAlgorithmException e) {
-            // The Java specification requires SHA-256 is included, so this should never
-            // happen.
-            throw new InternalError("SHA-256 is not available", e);
-        }
+        return newInstance(nquads).canonicalize();
     }
 
     public Collection<RdfNQuad> canonicalize() {
