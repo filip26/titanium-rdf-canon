@@ -11,16 +11,16 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Optional;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.apicatalog.rdf.Rdf;
-import com.apicatalog.rdf.RdfDataset;
 import com.apicatalog.rdf.RdfNQuad;
 import com.apicatalog.rdf.RdfResource;
 import com.apicatalog.rdf.RdfValue;
@@ -43,7 +43,7 @@ public class RdfCanonicalizer {
     private static final RdfResource BLANK_Z = Rdf.createBlankNode("_:z");
 
     /** Map of blank IDs to all the quads that reference that specific blank ID. */
-    private final HashMap<RdfValue, RdfDataset> blankIdToQuadSet = new HashMap<>();
+    private final HashMap<RdfValue, Collection<RdfNQuad>> blankIdToQuadSet = new HashMap<>();
 
     /** Issuer of canonical IDs to blank nodes. */
     private final IdentifierIssuer canonIssuer = new IdentifierIssuer("_:c14n");
@@ -124,14 +124,14 @@ public class RdfCanonicalizer {
             for (Position position : Position.CAN_BE_BLANK) {
                 RdfValue value = position.get(quad);
                 if (value != null && value.isBlankNode()) {
-                    blankIdToQuadSet.computeIfAbsent(value, k -> Rdf.createDataset()).add(quad);
+                    blankIdToQuadSet.computeIfAbsent(value, k -> new LinkedList<>()).add(quad);
                 }
             }
         }
     }
 
     private String hashFirstDegree(RdfValue blankId) {
-        List<RdfNQuad> related = blankIdToQuadSet.get(blankId).toList();
+        Collection<RdfNQuad> related = blankIdToQuadSet.get(blankId);
         String[] nQuads = new String[related.size()];
         int i = 0;
 
@@ -318,8 +318,8 @@ public class RdfCanonicalizer {
         private SortedMap<String, Set<RdfResource>> createHashToRelated(RdfResource id, IdentifierIssuer issuer) {
             SortedMap<String, Set<RdfResource>> hashToRelated = new TreeMap<>();
             // quads that refer to the blank node.
-            RdfDataset refer = blankIdToQuadSet.get(id);
-            for (RdfNQuad quad : refer.toList()) {
+            Collection<RdfNQuad> refer = blankIdToQuadSet.get(id);
+            for (RdfNQuad quad : refer) {
                 // find all the blank nodes that refer to this node by a quad
                 for (Position position : Position.CAN_BE_BLANK) {
                     if (position.isBlank(quad) && !id.equals(position.get(quad))) {
@@ -445,9 +445,7 @@ public class RdfCanonicalizer {
             sha256.reset();
             sha256.update(position.tag());
             if (position != Position.GRAPH) {
-                sha256.update((byte) '<');
-                sha256.update(quad.getPredicate().getValue().getBytes(StandardCharsets.UTF_8));
-                sha256.update((byte) '>');
+                sha256.update(quad.getPredicate().toString().getBytes(StandardCharsets.UTF_8));
             }
             sha256.update(id.getBytes(StandardCharsets.UTF_8));
             return hex(sha256.digest());
