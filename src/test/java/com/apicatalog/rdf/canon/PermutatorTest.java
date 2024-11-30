@@ -12,10 +12,10 @@ import com.apicatalog.rdf.RdfResource;
 /**
  * @author Simon Greatrix on 06/10/2020.
  */
-public class PermutatorTest {
+class PermutatorTest {
 
     @Test
-    public void test() {
+    void test() {
         Permutator permutator = new Permutator(new RdfResource[] {
                 Rdf.createBlankNode("_:s"),
                 Rdf.createBlankNode("_:e"),

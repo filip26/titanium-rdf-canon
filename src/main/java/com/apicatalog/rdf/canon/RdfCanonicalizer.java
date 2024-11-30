@@ -76,9 +76,9 @@ public class RdfCanonicalizer {
             // The Java specification requires SHA-256 is included, so this should never
             // happen.
             throw new InternalError("SHA-256 is not available", e);
-        }        
+        }
     }
-    
+
     /**
      * Normalize an RDF dataset using the URDNA 2015 algorithm.
      *
@@ -385,13 +385,16 @@ public class RdfCanonicalizer {
         /**
          * Calculate the hash from the N-Degree nodes.
          *
-         * @param id     the blank node starting ID
-         * @param issuer the identifier issuer
+         * @param id            the blank node starting ID
+         * @param defaultIssuer the identifier issuer
          *
          * @return the result
          */
-        NDegreeResult hash(RdfResource id, IdentifierIssuer issuer) {
-            SortedMap<String, Set<RdfResource>> hashToRelated = createHashToRelated(id, issuer);
+        NDegreeResult hash(final RdfResource id, final IdentifierIssuer defaultIssuer) {
+
+            IdentifierIssuer issuer = defaultIssuer;
+
+            SortedMap<String, Set<RdfResource>> hashToRelated = createHashToRelated(id, defaultIssuer);
 
             for (Entry<String, Set<RdfResource>> entry : hashToRelated.entrySet()) {
                 // 5.1 to 5.3: Append the hash for the related item to the hash we are building
