@@ -5,6 +5,7 @@ An implementation of the [W3C Standard RDF Dataset Canonicalization Algorithm](h
 [![Java 11 CI](https://github.com/filip26/titanium-rdfc/actions/workflows/java11-build.yml/badge.svg?branch=main)](https://github.com/filip26/titanium-rdfc/actions/workflows/java11-build.yml)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/8682ccd0fb314ee8a237462c25373686)](https://app.codacy.com/gh/filip26/titanium-rdfc/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 [![Codacy Badge](https://app.codacy.com/project/badge/Coverage/8682ccd0fb314ee8a237462c25373686)](https://app.codacy.com/gh/filip26/titanium-rdfc/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_coverage)
+[![Maven Central](https://img.shields.io/maven-central/v/com.apicatalog/titanium-rdfc.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:com.apicatalog%20AND%20a:titanium-rdfc)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 ## Examples
