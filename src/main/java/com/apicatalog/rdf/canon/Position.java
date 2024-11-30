@@ -14,7 +14,7 @@ import com.apicatalog.rdf.RdfValue;
  *
  * @author Simon Greatrix on 07/10/2020.
  */
-public enum Position {
+enum Position {
     /** The subject of the quad. */
     SUBJECT('s') {
         @Override
