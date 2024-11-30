@@ -11,11 +11,10 @@ An implementation of the [W3C Standard RDF Dataset Canonicalization Algorithm](h
 
 ```javascript
 
-// canonicalization
+// Simple canonicalization
 Collection<RdfNQuad> norm = RdfCanonicalizer.canonicalize(Collection<RdfNQuad>);
 
-// get access to data related to canonicalization process
-// i.e. labels map
+// Get an access to data related to canonicalization process.
 var canon = RdfCanonicalizer.canonicalize(Collection<RdfNQuad>);
 var norm = canon.canonicalize();
 var labels = canon.issuer().mappingTable();
@@ -24,8 +23,6 @@ var labels = canon.issuer().mappingTable();
 ## Installation
 
 ### Maven
-Java 11+
-
 ```xml
 <dependency>
     <groupId>com.apicatalog</groupId>
@@ -59,7 +56,6 @@ All PR's welcome!
 
 Fork and clone the project repository.
 
-#### Java 11
 ```bash
 > cd titanium-rdfc
 > mvn package
