@@ -67,6 +67,12 @@ public class RdfCanonicalizer {
         this.sha256 = sha256;
     }
 
+    /**
+     * Create a new {@link RdfCanonicalizer} instance.
+     * 
+     * @param nquads to canonicalize
+     * @return a new instance
+     */
     public static RdfCanonicalizer newInstance(Collection<RdfNQuad> nquads) {
         try {
             return new RdfCanonicalizer(
@@ -80,16 +86,21 @@ public class RdfCanonicalizer {
     }
 
     /**
-     * Normalize an RDF dataset using the URDNA 2015 algorithm.
+     * Canonicalize RDF dataset.
      *
-     * @param nquads the dataset to be normalized
+     * @param nquads the dataset to be canonicalized
      *
-     * @return a new normalized equivalent dataset.
+     * @return a canonical dataset.
      */
     public static Collection<RdfNQuad> canonicalize(Collection<RdfNQuad> nquads) {
         return newInstance(nquads).canonicalize();
     }
 
+    /**
+     * Canonicalize.
+     *
+     * @return a canonical dataset.
+     */
     public Collection<RdfNQuad> canonicalize() {
         // Step 1 is done by the constructor.
         // Step 2:
@@ -114,7 +125,7 @@ public class RdfCanonicalizer {
      * 
      * @return an instance
      */
-    public IdentifierIssuer canonIssuer() {
+    public IdentifierIssuer issuer() {
         return canonIssuer;
     }
 
