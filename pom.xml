@@ -6,8 +6,8 @@
 >
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.apicatalog</groupId>
-    <artifactId>titanium-rdf-canon</artifactId>
-    <version>0.2.0</version>
+    <artifactId>titanium-rdfc</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Titanium RDF Dataset Canonicalization</name>
@@ -18,7 +18,7 @@
         An implementation of the W3C RDF Dataset Canonicalization Algorithm
     </description>
 
-    <url>https://github.com/filip26/titanium-rdf-canon</url>
+    <url>https://github.com/filip26/titanium-rdfc</url>
 
     <licenses>
         <license>
@@ -29,14 +29,14 @@
 
     <issueManagement>
         <system>github</system>
-        <url>https://github.com/filip26/titanium-rdf-canon/issues</url>
+        <url>https://github.com/filip26/titanium-rdfc/issues</url>
     </issueManagement>
 
     <scm>
-        <connection>scm:git:git://github.com/filip26/titanium-rdf-canon.git</connection>
+        <connection>scm:git:git://github.com/filip26/titanium-rdfc.git</connection>
         <developerConnection>
-            scm:git:git://github.com/filip26/titanium-rdf-canon.git</developerConnection>
-        <url>https://github.com/filip26/titanium-rdf-canon</url>
+            scm:git:git://github.com/filip26/titanium-rdfc.git</developerConnection>
+        <url>https://github.com/filip26/titanium-rdfc</url>
     </scm>
 
     <developers>
@@ -55,7 +55,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <argLine>-Dfile.encoding=UTF-8</argLine>
 
-        <titanium.json-ld.version>1.4.0-SNAPSHOT</titanium.json-ld.version>
+        <titanium.json-ld.version>1.4.1</titanium.json-ld.version>
 
         <junit.version>5.10.2</junit.version>
     </properties>
