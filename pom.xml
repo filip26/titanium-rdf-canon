@@ -57,7 +57,7 @@
 
         <titanium.json-ld.version>1.4.1</titanium.json-ld.version>
 
-        <junit.version>5.11.3</junit.version>
+        <junit.version>5.11.4</junit.version>
     </properties>
 
     <dependencies>
