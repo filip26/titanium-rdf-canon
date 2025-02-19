@@ -55,7 +55,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <argLine>-Dfile.encoding=UTF-8</argLine>
 
-        <titanium.json-ld.version>1.4.1</titanium.json-ld.version>
+        <titanium.json-ld.version>1.5.0</titanium.json-ld.version>
 
         <junit.version>5.11.4</junit.version>
     </properties>
