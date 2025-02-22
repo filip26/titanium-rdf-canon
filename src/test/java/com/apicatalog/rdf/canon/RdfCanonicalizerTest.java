@@ -29,7 +29,14 @@ class RdfCanonicalizerTest {
             RdfDataset dataIn = Rdf.createReader(MediaType.N_QUADS, RdfCanonicalizerTest.class.getClassLoader().getResourceAsStream(fileIn)).readDataset();
             RdfDataset dataOut = Rdf.createReader(MediaType.N_QUADS, RdfCanonicalizerTest.class.getClassLoader().getResourceAsStream(fileOut)).readDataset();
 
-            Collection<RdfNQuad> processed = RdfCanonicalizer.canonicalize(dataIn.toList());
+            
+            RdfCanonicalizer can = RdfCanonicalizer.newInstance();
+
+            dataIn.toList().forEach(can::accept);
+
+            Collection<RdfNQuad> processed = can.canonize();
+            
+//            Collection<RdfNQuad> processed = RdfCanonicalizer.canonize(dataIn.toList());
 
             // processed and dataOut should be identical
             assertEquals(dataOut.size(), processed.size(), "Datasets must be same size");
@@ -43,7 +50,8 @@ class RdfCanonicalizerTest {
     static boolean checkGraph(Collection<RdfNQuad> out, Collection<RdfNQuad> processed) {
         for (RdfNQuad t : processed) {
             if (!out.contains(t)) {
-                System.err.println("Generated nquad not found in expected output: " + t.toString());
+                System.err.println("Generated nquad not found in expected output:");
+                System.err.println(t.toString());
                 System.err.println("Possible matches:");
                 for (RdfNQuad t0 : out) {
                     System.err.println(t0.toString());

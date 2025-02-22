@@ -2,11 +2,9 @@ package com.apicatalog.rdf.canon;
 
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.Optional;
 import java.util.Set;
 
 import com.apicatalog.rdf.RdfNQuad;
-import com.apicatalog.rdf.RdfResource;
 import com.apicatalog.rdf.RdfValue;
 
 /**
@@ -16,7 +14,7 @@ import com.apicatalog.rdf.RdfValue;
  */
 enum Position {
     /** The subject of the quad. */
-    SUBJECT('s') {
+    SUBJECT('s', 0) {
         @Override
         public boolean isBlank(RdfNQuad quad) {
             return quad.getSubject().isBlankNode();
@@ -30,7 +28,7 @@ enum Position {
     },
 
     /** The object of the quad. */
-    OBJECT('o') {
+    OBJECT('o', 2) {
         @Override
         RdfValue get(RdfNQuad quad) {
             return quad.getObject();
@@ -43,7 +41,7 @@ enum Position {
     },
 
     /** The graph the quad belongs to. */
-    GRAPH('g') {
+    GRAPH('g', 3) {
         @Override
         RdfValue get(RdfNQuad quad) {
             return quad.getGraphName().orElse(null);
@@ -51,8 +49,7 @@ enum Position {
 
         @Override
         public boolean isBlank(RdfNQuad quad) {
-            Optional<RdfResource> name = quad.getGraphName();
-            return name.isPresent() && name.get().isBlankNode();
+            return quad.getGraphName().filter(RdfValue::isBlankNode).isPresent();
         }
     },
 
@@ -60,7 +57,7 @@ enum Position {
      * The predicate of the quad. Note the predicate is not used by the URDNA-2015
      * algorithm.
      */
-    PREDICATE('p') {
+    PREDICATE('p', 1) {
         @Override
         RdfValue get(RdfNQuad quad) {
             return quad.getPredicate();
@@ -82,9 +79,11 @@ enum Position {
      * The tag used to represent the position in hashes.
      */
     private final byte tag;
+    private final int index;
 
-    Position(char ch) {
-        tag = (byte) ch;
+    Position(char ch, int index) {
+        this.tag = (byte) ch;
+        this.index = index;
     }
 
     /**
@@ -112,5 +111,14 @@ enum Position {
      */
     public byte tag() {
         return tag;
+    }
+
+    /**
+     * Get the position index in an nquad array. [subject, predicate, object, graph]
+     * 
+     * @return the index
+     */
+    public int index() {
+        return index;
     }
 }

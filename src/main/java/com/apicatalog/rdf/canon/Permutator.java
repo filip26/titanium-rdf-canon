@@ -70,5 +70,4 @@ class Permutator implements Iterator<RdfResource[]> {
         array[i] = array[j];
         array[j] = t;
     }
-
 }
