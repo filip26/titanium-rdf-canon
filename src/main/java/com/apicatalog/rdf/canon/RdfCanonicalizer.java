@@ -22,10 +22,10 @@ import java.util.TreeMap;
 import java.util.function.Consumer;
 
 import com.apicatalog.rdf.Rdf;
-import com.apicatalog.rdf.RdfConsumer;
 import com.apicatalog.rdf.RdfNQuad;
 import com.apicatalog.rdf.RdfResource;
 import com.apicatalog.rdf.RdfValue;
+import com.apicatalog.rdf.api.RdfQuadConsumer;
 
 /**
  * A Standard RDF Dataset Canonicalization Algorithm
@@ -33,7 +33,7 @@ import com.apicatalog.rdf.RdfValue;
  * @see <a href="https://www.w3.org/TR/rdf-canon/">W3C Standard RDF Dataset
  *      Canonicalization Algorithm</a>
  */
-public class RdfCanonicalizer implements RdfConsumer, Consumer<RdfNQuad> {
+public class RdfCanonicalizer implements RdfQuadConsumer, Consumer<RdfNQuad> {
 
     /**
      * The lower-case hexadecimal alphabet.
@@ -56,8 +56,6 @@ public class RdfCanonicalizer implements RdfConsumer, Consumer<RdfNQuad> {
      */
     private final Map<String, Set<MutableBlankNode>> hashToBlankId = new TreeMap<>();
 
-    private RdfResource rdfGraphName;
-
     /** All the n-quads in the dataset to be processed. */
     private final List<RdfNQuad> nquads;
 
@@ -71,7 +69,6 @@ public class RdfCanonicalizer implements RdfConsumer, Consumer<RdfNQuad> {
         this.blankIdToQuadSet = blankIdToQuadSet;
         this.resources = resources;
         this.sha256 = sha256;
-        this.rdfGraphName = null;
         this.nquads = nquads;
     }
 
@@ -94,62 +91,6 @@ public class RdfCanonicalizer implements RdfConsumer, Consumer<RdfNQuad> {
 
         // Step 7:
         return makeCanonQuads();
-    }
-
-    @Override
-    public void defaultGraph() {
-        this.rdfGraphName = null;
-    }
-
-    @Override
-    public void namedGraph(String graph, boolean blankGraph) {
-        this.rdfGraphName = getResource(graph, blankGraph);
-    }
-
-    @Override
-    public void accept(String subject, boolean blankSubject, String predicate, boolean blankPredicate, String object, boolean blankObject) {
-
-        RdfResource rdfSubject = getResource(subject, blankSubject);
-        RdfResource rdfObject = getResource(object, blankObject);
-
-        RdfNQuad quad = Rdf.createNQuad(
-                rdfSubject,
-                getResource(predicate, blankPredicate),
-                rdfObject,
-                rdfGraphName);
-
-        if (blankSubject) {
-            blankIdToQuadSet.computeIfAbsent((MutableBlankNode) rdfSubject, k -> new LinkedList<>()).add(quad);
-        }
-
-        if (blankObject) {
-            blankIdToQuadSet.computeIfAbsent((MutableBlankNode) rdfObject, k -> new LinkedList<>()).add(quad);
-        }
-
-        if (rdfGraphName != null && rdfGraphName.isBlankNode()) {
-            blankIdToQuadSet.computeIfAbsent((MutableBlankNode) rdfGraphName, k -> new LinkedList<>()).add(quad);
-        }
-    }
-
-    @Override
-    public void accept(String subject, boolean blankSubject, String predicate, boolean blankPredicate, String literal, String datatype, String language) {
-        RdfResource rdfSubject = getResource(subject, blankSubject);
-
-        RdfNQuad quad = Rdf.createNQuad(
-                rdfSubject,
-                getResource(predicate, blankPredicate),
-                language != null
-                        ? Rdf.createLangString(literal, language)
-                        : Rdf.createTypedString(literal, datatype),
-                rdfGraphName);
-
-        if (blankSubject) {
-            blankIdToQuadSet.computeIfAbsent((MutableBlankNode) rdfSubject, k -> new LinkedList<>()).add(quad);
-        }
-
-        if (rdfGraphName != null && rdfGraphName.isBlankNode()) {
-            blankIdToQuadSet.computeIfAbsent((MutableBlankNode) rdfGraphName, k -> new LinkedList<>()).add(quad);
-        }
     }
 
     @Override
@@ -215,8 +156,8 @@ public class RdfCanonicalizer implements RdfConsumer, Consumer<RdfNQuad> {
         }
     }
 
-    protected final RdfResource getResource(final String name, final boolean blank) {
-        return resources.computeIfAbsent(name, arg0 -> blank
+    protected final RdfResource getResource(final String name) {
+        return resources.computeIfAbsent(name, arg0 -> name.startsWith("_:")
                 ? new MutableBlankNode(name)
                 : Rdf.createIRI(name));
     }
@@ -536,5 +477,74 @@ public class RdfCanonicalizer implements RdfConsumer, Consumer<RdfNQuad> {
             sha256.update(id.getBytes(StandardCharsets.UTF_8));
             return hex(sha256.digest());
         }
+    }
+
+    @Override
+    public RdfQuadConsumer quad(String subject, String predicate, String object, String graph) {
+        RdfResource rdfSubject = getResource(subject);
+        RdfResource rdfObject = getResource(object);
+        RdfResource rdfGraph = graph != null ? getResource(graph) : null;
+        
+        RdfNQuad quad = Rdf.createNQuad(
+                rdfSubject,
+                getResource(predicate),
+                rdfObject,
+                rdfGraph);
+
+        if (rdfSubject.isBlankNode()) {
+            blankIdToQuadSet.computeIfAbsent((MutableBlankNode) rdfSubject, k -> new LinkedList<>()).add(quad);
+        }
+
+        if (rdfObject.isBlankNode()) {
+            blankIdToQuadSet.computeIfAbsent((MutableBlankNode) rdfObject, k -> new LinkedList<>()).add(quad);
+        }
+
+        if (rdfGraph != null && rdfGraph.isBlankNode()) {
+            blankIdToQuadSet.computeIfAbsent((MutableBlankNode) rdfGraph, k -> new LinkedList<>()).add(quad);
+        }
+        return this;
+    }
+
+    @Override
+    public RdfQuadConsumer quad(String subject, String predicate, String literal, String datatype, String graph) {
+        RdfResource rdfSubject = getResource(subject);
+        RdfResource rdfGraph = graph != null ? getResource(graph) : null;
+
+        RdfNQuad quad = Rdf.createNQuad(
+                rdfSubject,
+                getResource(predicate),
+                Rdf.createTypedString(literal, datatype),
+                rdfGraph);
+
+        if (rdfSubject.isBlankNode()) {
+            blankIdToQuadSet.computeIfAbsent((MutableBlankNode) rdfSubject, k -> new LinkedList<>()).add(quad);
+        }
+
+        if (rdfGraph != null && rdfGraph.isBlankNode()) {
+            blankIdToQuadSet.computeIfAbsent((MutableBlankNode) rdfGraph, k -> new LinkedList<>()).add(quad);
+        }
+        return this;
+    }
+
+    @Override
+    public RdfQuadConsumer quad(String subject, String predicate, String literal, String language, String direction, String graph) {
+        RdfResource rdfSubject = getResource(subject);
+        RdfResource rdfGraph = graph != null ? getResource(graph) : null;
+
+        RdfNQuad quad = Rdf.createNQuad(
+                rdfSubject,
+                getResource(predicate),
+                Rdf.createLangString(literal, language, direction),
+                rdfGraph);
+
+        if (rdfSubject.isBlankNode()) {
+            blankIdToQuadSet.computeIfAbsent((MutableBlankNode) rdfSubject, k -> new LinkedList<>()).add(quad);
+        }
+
+        if (rdfGraph != null && rdfGraph.isBlankNode()) {
+            blankIdToQuadSet.computeIfAbsent((MutableBlankNode) rdfGraph, k -> new LinkedList<>()).add(quad);
+        }
+        
+        return this;
     }
 }

@@ -30,24 +30,17 @@ class MutableBlankNode implements RdfResource {
         if (obj == null) {
             return false;
         }
+        if (getClass() == obj.getClass()) {
+            MutableBlankNode other = (MutableBlankNode) obj;
+            return Objects.equals(value, other.value);
+        }        
+
         if (!(obj instanceof RdfResource)) {
             return false;
         }
         RdfResource other = (RdfResource) obj;
         return other.isBlankNode() && Objects.equals(value, other.getValue());
     }
-//
-//    @Override
-//    public boolean equals(Object obj) {
-//        if (this == obj)
-//            return true;
-//        if (obj == null)
-//            return false;
-//        if (getClass() != obj.getClass())
-//            return false;
-//        MutableBlankNode other = (MutableBlankNode) obj;
-//        return Objects.equals(value, other.value);
-//    }
 
     @Override
     public String toString() {
