@@ -46,6 +46,7 @@ public class RdfCanonicalizer implements RdfQuadConsumer, Consumer<RdfNQuad> {
 
     /** Map of blank IDs to all the quads that reference that specific blank ID. */
     protected final Map<String, Collection<RdfNQuad>> blankIdToQuadSet;
+
     protected final Map<String, RdfResource> resources;
 
     /** Issuer of canonical IDs to blank nodes. */
@@ -156,33 +157,24 @@ public class RdfCanonicalizer implements RdfQuadConsumer, Consumer<RdfNQuad> {
         }
     }
 
-    protected final RdfResource getResource(final String name) {
-        return resources.computeIfAbsent(name, arg0 -> name.startsWith("_:")
-                ? new MutableBlankNode(name)
-                : Rdf.createIRI(name));
-    }
+    protected String forBlank(RdfNQuad q0, String blankNodeId) {
 
-    protected final MutableBlankNode getMutableBlankNode(final String value) {
-        return (MutableBlankNode) resources.computeIfAbsent(value, arg0 -> new MutableBlankNode(value));
-    }
-
-    protected static String forBlank(RdfNQuad q0, RdfValue blankId) {
         RdfResource subject = q0.getSubject();
         if (subject.isBlankNode()) {
             // A blank node is always a resource
-            subject = subject.equals(blankId) ? BLANK_A : BLANK_Z;
+            subject = subject.getValue().equals(blankNodeId) ? BLANK_A : BLANK_Z;
         }
 
         RdfValue object = q0.getObject();
         if (object.isBlankNode()) {
-            object = object.equals(blankId) ? BLANK_A : BLANK_Z;
+            object = object.getValue().equals(blankNodeId) ? BLANK_A : BLANK_Z;
         }
 
         Optional<RdfResource> graph = q0.getGraphName();
         if (graph.isPresent()) {
             RdfResource g = graph.get();
             if (g.isBlankNode()) {
-                graph = Optional.of(g.equals(blankId) ? BLANK_A : BLANK_Z);
+                graph = Optional.of(g.getValue().equals(blankNodeId) ? BLANK_A : BLANK_Z);
             }
         }
 
@@ -194,17 +186,15 @@ public class RdfCanonicalizer implements RdfQuadConsumer, Consumer<RdfNQuad> {
     }
 
     private String hashFirstDegree(final String blankNodeId) {
-        
-        RdfResource blankNode = resources.get(blankNodeId);
-        
-        Collection<RdfNQuad> related = blankIdToQuadSet.get(blankNode.getValue());
+
+        Collection<RdfNQuad> related = blankIdToQuadSet.get(blankNodeId);
         String[] nQuads = new String[related.size()];
         int i = 0;
 
         // Convert the NQuads to a consistent set by replacing the reference with _:a
         // and all others with _:z, and then sorting
         for (RdfNQuad q0 : related) {
-            nQuads[i] = forBlank(q0, blankNode);
+            nQuads[i] = forBlank(q0, blankNodeId);
             i++;
         }
 
@@ -276,7 +266,7 @@ public class RdfCanonicalizer implements RdfQuadConsumer, Consumer<RdfNQuad> {
 
             MutableBlankNode blankNode = (MutableBlankNode) resources.get(blankNodeId);
 
-            blankNode.setValue(canonIssuer.getIfExists(blankNode.getValue()));
+            blankNode.setValue(canonIssuer.getIfExists(blankNodeId));
         }
 
         Collections.sort(nquads, RdfNQuadComparator.asc());
@@ -346,17 +336,17 @@ public class RdfCanonicalizer implements RdfQuadConsumer, Consumer<RdfNQuad> {
          *
          * @return the required mapping
          */
-        private SortedMap<String, Set<RdfResource>> createHashToRelated(RdfResource id, IdentifierIssuer issuer) {
-            SortedMap<String, Set<RdfResource>> hashToRelated = new TreeMap<>();
+        private SortedMap<String, Set<String>> createHashToRelated(String id, IdentifierIssuer issuer) {
+            SortedMap<String, Set<String>> hashToRelated = new TreeMap<>();
             // quads that refer to the blank node.
-            Collection<RdfNQuad> refer = blankIdToQuadSet.get(id.getValue());
+            Collection<RdfNQuad> refer = blankIdToQuadSet.get(id);
             for (RdfNQuad quad : refer) {
                 // find all the blank nodes that refer to this node by a quad
                 for (Position position : Position.CAN_BE_BLANK) {
-                    if (position.isBlank(quad) && !id.equals(position.get(quad))) {
+                    if (position.isBlank(quad) && !id.equals(position.get(quad).getValue())) {
                         RdfResource related = (RdfResource) position.get(quad);
                         String hash = hashRelatedBlankNode(related.getValue(), quad, issuer, position);
-                        hashToRelated.computeIfAbsent(hash, h -> new HashSet<>()).add(related);
+                        hashToRelated.computeIfAbsent(hash, h -> new HashSet<>()).add(related.getValue());
                     }
                 }
             }
@@ -369,14 +359,17 @@ public class RdfCanonicalizer implements RdfQuadConsumer, Consumer<RdfNQuad> {
          * @param permutation the permutation
          * @param issuer      the identifier issuer
          */
-        private void doPermutation(RdfResource[] permutation, IdentifierIssuer issuer) {
+        private void doPermutation(String[] permutation, IdentifierIssuer issuer) {
             // 5.4.1 to 5.4.3 : initialize variables
             IdentifierIssuer issuerCopy = issuer.copy();
             StringBuilder pathBuilder = new StringBuilder();
             List<MutableBlankNode> recursionList = new ArrayList<>();
 
             // 5.4.4: for every resource in the this permutation of the resources
-            for (RdfResource related : permutation) {
+            for (final String relatedId : permutation) {
+
+                RdfResource related = resources.get(relatedId);
+
                 appendToPath(related, pathBuilder, issuerCopy, recursionList);
 
                 // 5.4.4.3: Is this path better than our chosen path?
@@ -416,20 +409,18 @@ public class RdfCanonicalizer implements RdfQuadConsumer, Consumer<RdfNQuad> {
         /**
          * Calculate the hash from the N-Degree nodes.
          *
-         * @param bid            the blank node starting ID
+         * @param bid           the blank node starting ID
          * @param defaultIssuer the identifier issuer
          *
          * @return the result
          */
-        NDegreeResult hash(final String bid, final IdentifierIssuer defaultIssuer) {
+        NDegreeResult hash(final String id, final IdentifierIssuer defaultIssuer) {
 
-            RdfResource id = resources.get(bid);
-            
             IdentifierIssuer issuer = defaultIssuer;
 
-            SortedMap<String, Set<RdfResource>> hashToRelated = createHashToRelated(id, defaultIssuer);
+            SortedMap<String, Set<String>> hashToRelated = createHashToRelated(id, defaultIssuer);
 
-            for (Entry<String, Set<RdfResource>> entry : hashToRelated.entrySet()) {
+            for (Entry<String, Set<String>> entry : hashToRelated.entrySet()) {
                 // 5.1 to 5.3: Append the hash for the related item to the hash we are building
                 // and initialise variables
                 dataToHash.append(entry.getKey());
@@ -437,7 +428,7 @@ public class RdfCanonicalizer implements RdfQuadConsumer, Consumer<RdfNQuad> {
                 chosenIssuer = null;
 
                 // 5.4: For every possible permutation of the blank node list...
-                Permutator permutator = new Permutator(entry.getValue().toArray(new RdfResource[entry.getValue().size()]));
+                Permutator permutator = new Permutator(entry.getValue().toArray(new String[entry.getValue().size()]));
                 while (permutator.hasNext()) {
                     doPermutation(permutator.next(), issuer);
                 }
@@ -555,5 +546,15 @@ public class RdfCanonicalizer implements RdfQuadConsumer, Consumer<RdfNQuad> {
         }
 
         return this;
+    }
+
+    protected final RdfResource getResource(final String name) {
+        return resources.computeIfAbsent(name, arg0 -> name.startsWith("_:")
+                ? new MutableBlankNode(name)
+                : Rdf.createIRI(name));
+    }
+
+    protected final MutableBlankNode getMutableBlankNode(final String value) {
+        return (MutableBlankNode) resources.computeIfAbsent(value, arg0 -> new MutableBlankNode(value));
     }
 }
