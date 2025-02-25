@@ -3,10 +3,6 @@ package com.apicatalog.rdf.canon;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import com.apicatalog.rdf.Rdf;
-import com.apicatalog.rdf.RdfResource;
-import com.apicatalog.rdf.RdfValue;
-
 /**
  * An issuer of counted identifiers to map identifiers from one naming scheme to
  * another.
@@ -16,7 +12,7 @@ import com.apicatalog.rdf.RdfValue;
 public class IdentifierIssuer {
 
     /** Identifiers that have already been issued. */
-    private final Map<MutableBlankNode, RdfResource> existing;
+    private final Map<String, String> existing;
 
     /** The prefix for new identifiers. */
     private final String prefix;
@@ -33,7 +29,7 @@ public class IdentifierIssuer {
         this(prefix, new LinkedHashMap<>(), 0);
     }
 
-    public IdentifierIssuer(String prefix, Map<MutableBlankNode, RdfResource> mapping, int counter) {
+    public IdentifierIssuer(String prefix, Map<String, String> mapping, int counter) {
         this.prefix = prefix;
         this.existing = mapping;
         this.counter = counter;
@@ -61,7 +57,7 @@ public class IdentifierIssuer {
         return newIssuer;
     }
 
-    private RdfResource getForBlank(MutableBlankNode value) {
+    private String getForBlank(String value) {
         if (hasId(value)) {
             return getId(value);
         }
@@ -75,8 +71,8 @@ public class IdentifierIssuer {
      *
      * @return the new ID
      */
-    public RdfResource getId(MutableBlankNode id) {
-        return existing.computeIfAbsent(id, k -> Rdf.createBlankNode(prefix + (counter++)));
+    public String getId(String id) {
+        return existing.computeIfAbsent(id, k -> (prefix + (counter++)));
     }
 
     /**
@@ -86,19 +82,8 @@ public class IdentifierIssuer {
      *
      * @return the value or the replaced value
      */
-    public RdfResource getIfExists(MutableBlankNode value) {
-        return (value != null && value.isBlankNode()) ? getForBlank(value) : value;
-    }
-
-    /**
-     * Get the resource replaced by a proper blank identifier if appropriate.
-     *
-     * @param value the resource to check
-     *
-     * @return the value or the replaced value
-     */
-    RdfValue getIfExists(RdfValue value) {
-        return (value != null && value.isBlankNode()) ? getForBlank((MutableBlankNode) value) : value;
+    public String getIfExists(String value) {
+        return value != null ? getForBlank(value) : value;
     }
 
     /**
@@ -108,7 +93,7 @@ public class IdentifierIssuer {
      *
      * @return true of a new ID has been allocated for this old ID.
      */
-    public boolean hasId(RdfResource id) {
+    public boolean hasId(String id) {
         return existing.containsKey(id);
     }
 
@@ -117,7 +102,7 @@ public class IdentifierIssuer {
      * 
      * @return a mapping table
      */
-    public Map<MutableBlankNode, RdfResource> mappingTable() {
+    public Map<String, String> mappingTable() {
         return existing;
     }
 }

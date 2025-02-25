@@ -233,7 +233,8 @@ public class RdfCanonicalizer implements RdfQuadConsumer, Consumer<RdfNQuad> {
                 Set<MutableBlankNode> values = entry.getValue();
                 if (values.size() == 1) {
                     MutableBlankNode id = values.iterator().next();
-                    canonIssuer.getId(id);
+                    // allocate a new id
+                    canonIssuer.getId(id.getValue());
                     nonNormalized.remove(id);
                     iterator.remove();
                     simple = true;
@@ -247,13 +248,13 @@ public class RdfCanonicalizer implements RdfQuadConsumer, Consumer<RdfNQuad> {
             List<NDegreeResult> hashPathList = new ArrayList<>();
             for (MutableBlankNode id : entry.getValue()) {
                 // if we've already assigned a canonical ID for this node, skip it
-                if (canonIssuer.hasId(id)) {
+                if (canonIssuer.hasId(id.getValue())) {
                     continue;
                 }
 
                 // Create a new blank ID issuer and assign it's first ID to the reference id
                 IdentifierIssuer blankIssuer = new IdentifierIssuer("_:b");
-                blankIssuer.getId(id);
+                blankIssuer.getId(id.getValue());
 
                 NDegreeResult path = hashNDegreeQuads(id, blankIssuer);
                 hashPathList.add(path);
@@ -268,8 +269,9 @@ public class RdfCanonicalizer implements RdfQuadConsumer, Consumer<RdfNQuad> {
 
     private Collection<RdfNQuad> makeCanonQuads() {
 
+        // relabel blank nodes
         for (MutableBlankNode blankNode : blankIdToQuadSet.keySet()) {
-            blankNode.setValue(canonIssuer.getIfExists(blankNode).getValue());
+            blankNode.setValue(canonIssuer.getIfExists(blankNode.getValue()));
         }
 
         Collections.sort(nquads, RdfNQuadComparator.asc());
@@ -319,15 +321,20 @@ public class RdfCanonicalizer implements RdfQuadConsumer, Consumer<RdfNQuad> {
          * @param recursionList the node recursion list
          */
         private void appendToPath(RdfResource related, StringBuilder pathBuilder, IdentifierIssuer issuerCopy, List<MutableBlankNode> recursionList) {
-            if (canonIssuer.hasId(related)) {
+
+            if (!related.isBlankNode()) {
+                return;
+            }
+
+            if (canonIssuer.hasId(related.getValue())) {
                 // 5.4.4.1: Already has a canonical ID so we just use it.
-                pathBuilder.append(canonIssuer.getId((MutableBlankNode) related).getValue());
+                pathBuilder.append(canonIssuer.getId(related.getValue()));
             } else {
                 // 5.4.4.2: Need to try an ID, and possibly recurse
-                if (!issuerCopy.hasId(related)) {
+                if (!issuerCopy.hasId(related.getValue())) {
                     recursionList.add((MutableBlankNode) related);
                 }
-                pathBuilder.append(issuerCopy.getId((MutableBlankNode) related).getValue());
+                pathBuilder.append(issuerCopy.getId(related.getValue()));
             }
         }
 
@@ -385,7 +392,7 @@ public class RdfCanonicalizer implements RdfQuadConsumer, Consumer<RdfNQuad> {
                 NDegreeResult result = hashNDegreeQuads(related, issuerCopy);
 
                 pathBuilder
-                        .append(issuerCopy.getId(related).getValue())
+                        .append(issuerCopy.getId(related.getValue()))
                         .append('<')
                         .append(result.getHash())
                         .append('>');
@@ -460,10 +467,10 @@ public class RdfCanonicalizer implements RdfQuadConsumer, Consumer<RdfNQuad> {
                 Position position) {
             // Find an ID for the blank ID
             String id;
-            if (canonIssuer.hasId(related)) {
-                id = canonIssuer.getId((MutableBlankNode) related).getValue();
-            } else if (issuer.hasId(related)) {
-                id = issuer.getId((MutableBlankNode) related).getValue();
+            if (canonIssuer.hasId(related.getValue())) {
+                id = canonIssuer.getId(related.getValue());
+            } else if (issuer.hasId(related.getValue())) {
+                id = issuer.getId(related.getValue());
             } else {
                 id = hashFirstDegree(related);
             }
@@ -484,7 +491,7 @@ public class RdfCanonicalizer implements RdfQuadConsumer, Consumer<RdfNQuad> {
         RdfResource rdfSubject = getResource(subject);
         RdfResource rdfObject = getResource(object);
         RdfResource rdfGraph = graph != null ? getResource(graph) : null;
-        
+
         RdfNQuad quad = Rdf.createNQuad(
                 rdfSubject,
                 getResource(predicate),
@@ -544,7 +551,7 @@ public class RdfCanonicalizer implements RdfQuadConsumer, Consumer<RdfNQuad> {
         if (rdfGraph != null && rdfGraph.isBlankNode()) {
             blankIdToQuadSet.computeIfAbsent((MutableBlankNode) rdfGraph, k -> new LinkedList<>()).add(quad);
         }
-        
+
         return this;
     }
 }
