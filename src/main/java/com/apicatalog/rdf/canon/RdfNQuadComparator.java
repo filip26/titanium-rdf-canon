@@ -2,9 +2,7 @@ package com.apicatalog.rdf.canon;
 
 import java.util.Comparator;
 
-import com.apicatalog.rdf.RdfNQuad;
-
-public class RdfNQuadComparator implements Comparator<RdfNQuad> {
+class RdfNQuadComparator implements Comparator<RdfNQuad> {
 
     protected static Comparator<RdfNQuad> INSTANCE = new RdfNQuadComparator();
     

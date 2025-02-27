@@ -2,8 +2,6 @@ package com.apicatalog.rdf.canon;
 
 import java.util.Objects;
 
-import com.apicatalog.rdf.RdfResource;
-
 class MutableBlankNode implements RdfResource {
 
     private String value;

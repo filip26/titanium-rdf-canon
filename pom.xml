@@ -55,7 +55,8 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <argLine>-Dfile.encoding=UTF-8</argLine>
 
-        <titanium.json-ld.version>1.6.0-SNAPSHOT</titanium.json-ld.version>
+        <titanium.rdf.api.version>1.0.0-SNAPSHOT</titanium.rdf.api.version>
+        <titanium.rdf.nquads.version>1.0.0-SNAPSHOT</titanium.rdf.nquads.version>
 
         <junit.version>5.11.4</junit.version>
     </properties>
@@ -63,10 +64,14 @@
     <dependencies>
         <dependency>
             <groupId>com.apicatalog</groupId>
-            <artifactId>titanium-json-ld</artifactId>
-            <version>${titanium.json-ld.version}</version>
-            <scope>provided</scope>
+            <artifactId>titanium-rdf-api</artifactId>
+            <version>${titanium.rdf.api.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.apicatalog</groupId>
+            <artifactId>titanium-rdf-n-quads</artifactId>
+            <version>${titanium.rdf.nquads.version}</version>
+        </dependency>        
         <!--  Tests -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>

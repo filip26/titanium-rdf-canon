@@ -21,10 +21,6 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.function.Consumer;
 
-import com.apicatalog.rdf.Rdf;
-import com.apicatalog.rdf.RdfNQuad;
-import com.apicatalog.rdf.RdfResource;
-import com.apicatalog.rdf.RdfValue;
 import com.apicatalog.rdf.api.RdfQuadConsumer;
 
 /**
@@ -102,7 +98,8 @@ public class RdfCanonicalizer implements RdfQuadConsumer, Consumer<RdfNQuad> {
 
         for (Position position : Position.CAN_BE_BLANK) {
             if (position.isBlank(nquad)) {
-                RdfValue blankNode = position.get(nquad);
+                String blankNodeId = position.get(nquad);
+                RdfValue blankNode = resources.get(blankNodeId);
                 if (!(blankNode instanceof MutableBlankNode)) {
                     blankNodes[position.index()] = getMutableBlankNode(blankNode.getValue());
                     newNQuad = true;
@@ -178,6 +175,9 @@ public class RdfCanonicalizer implements RdfQuadConsumer, Consumer<RdfNQuad> {
             }
         }
 
+        //TODO
+//        NQuadsWriter.nquad(subject, q0.getPredicate(), object, graph.orElse(null));
+        
         return Rdf.createNQuad(subject, q0.getPredicate(), object, graph.orElse(null)).toString() + '\n';
     }
 
@@ -343,10 +343,10 @@ public class RdfCanonicalizer implements RdfQuadConsumer, Consumer<RdfNQuad> {
             for (RdfNQuad quad : refer) {
                 // find all the blank nodes that refer to this node by a quad
                 for (Position position : Position.CAN_BE_BLANK) {
-                    if (position.isBlank(quad) && !id.equals(position.get(quad).getValue())) {
-                        RdfResource related = (RdfResource) position.get(quad);
-                        String hash = hashRelatedBlankNode(related.getValue(), quad, issuer, position);
-                        hashToRelated.computeIfAbsent(hash, h -> new HashSet<>()).add(related.getValue());
+                    if (position.isBlank(quad) && !id.equals(position.get(quad))) {
+                        String related = position.get(quad);
+                        String hash = hashRelatedBlankNode(related, quad, issuer, position);
+                        hashToRelated.computeIfAbsent(hash, h -> new HashSet<>()).add(related);
                     }
                 }
             }

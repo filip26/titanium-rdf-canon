@@ -4,9 +4,6 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Set;
 
-import com.apicatalog.rdf.RdfNQuad;
-import com.apicatalog.rdf.RdfValue;
-
 /**
  * Enumeration of positions in an RDF quad.
  *
@@ -21,8 +18,8 @@ enum Position {
         }
 
         @Override
-        RdfValue get(RdfNQuad quad) {
-            return quad.getSubject();
+        String get(RdfNQuad quad) {
+            return quad.getSubject().getValue();
         }
 
     },
@@ -30,8 +27,8 @@ enum Position {
     /** The object of the quad. */
     OBJECT('o', 2) {
         @Override
-        RdfValue get(RdfNQuad quad) {
-            return quad.getObject();
+        String get(RdfNQuad quad) {
+            return quad.getObject().getValue();
         }
 
         @Override
@@ -43,8 +40,8 @@ enum Position {
     /** The graph the quad belongs to. */
     GRAPH('g', 3) {
         @Override
-        RdfValue get(RdfNQuad quad) {
-            return quad.getGraphName().orElse(null);
+        String get(RdfNQuad quad) {
+            return quad.getGraphName().map(RdfResource::getValue).orElse(null);
         }
 
         @Override
@@ -59,8 +56,8 @@ enum Position {
      */
     PREDICATE('p', 1) {
         @Override
-        RdfValue get(RdfNQuad quad) {
-            return quad.getPredicate();
+        String get(RdfNQuad quad) {
+            return quad.getPredicate().getValue();
         }
 
         @Override
@@ -93,7 +90,7 @@ enum Position {
      *
      * @return the value at this position
      */
-    abstract RdfValue get(RdfNQuad quad);
+    abstract String get(RdfNQuad quad);
 
     /**
      * Is the value at this position in the quad a blank node identifier?.
