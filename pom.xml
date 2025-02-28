@@ -10,12 +10,12 @@
     <version>2.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>Titanium RDF Dataset Canonicalization</name>
+    <name>Titanium RDF Dataset Canonicalization (RDFC 1.0)</name>
 
     <inceptionYear>2024</inceptionYear>
 
     <description>
-        An implementation of the W3C RDF Dataset Canonicalization Algorithm
+        An implementation of the W3C RDF Dataset Canonicalization Algorithm (RDFC 1.0)
     </description>
 
     <url>https://github.com/filip26/titanium-rdfc</url>
@@ -58,7 +58,9 @@
         <titanium.rdf.api.version>1.0.0-SNAPSHOT</titanium.rdf.api.version>
         <titanium.rdf.nquads.version>1.0.0-SNAPSHOT</titanium.rdf.nquads.version>
 
-        <junit.version>5.11.4</junit.version>
+        <!-- tests -->
+        <junit.version>5.12.0</junit.version>
+        <jakarta.json.version>2.0.1</jakarta.json.version>
     </properties>
 
     <dependencies>
@@ -85,6 +87,12 @@
             <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.glassfish</groupId>
+            <artifactId>jakarta.json</artifactId>
+            <version>${jakarta.json.version}</version>
+            <scope>test</scope>
+        </dependency>                
     </dependencies>
 
     <build>
