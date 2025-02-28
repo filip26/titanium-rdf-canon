@@ -1,12 +1,14 @@
 package com.apicatalog.rdf.canon;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.io.StringWriter;
 import java.util.Collection;
 import java.util.stream.Stream;
 
@@ -15,6 +17,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import com.apicatalog.rdf.nquads.NQuadsReader;
+import com.apicatalog.rdf.nquads.NQuadsWriter;
 
 import jakarta.json.Json;
 import jakarta.json.JsonObject;
@@ -30,25 +33,45 @@ class RdfCanonTest {
 
         final RdfCanonicalizer canon = RdfCanonicalizer.newInstance();
 
-        try (Reader reader = new InputStreamReader(RdfCanonTest.class.getResourceAsStream(testCase.input))) {
-            new NQuadsReader(reader)
-                    .provide(canon);
+        try (final Reader reader = new InputStreamReader(RdfCanonTest.class.getResourceAsStream(testCase.input))) {
+            new NQuadsReader(reader).provide(canon);
         }
 
-        canon.canonize();
-
+        final StringWriter writer = new StringWriter();
+        canon.provide(new NQuadsWriter(writer));
+        
+        String result = writer.toString();
+        assertNotNull(result);
+        
         String expected = null;
         
-        try (InputStream is = RdfCanonTest.class.getResourceAsStream(testCase.expected)) {
+        try (final InputStream is = RdfCanonTest.class.getResourceAsStream(testCase.expected)) {
             expected = isToString(is);
         }
         
         assertNotNull(expected);
 
+        boolean match = expected.equals(result);
         
-//        for (int i = 1; i <= 62; i++) {
-//            String fileIn = String.format("test%03d-in.nq", i);
-//            String fileOut = String.format("test%03d-urdna2015.nq", i);
+        if (!match) {
+            System.out.println(testCase.id + ": " + testCase.name);
+            System.out.print(testCase.type);
+            if (testCase.comment != null) {
+                System.out.println(" - " + testCase.comment);                
+            } else {
+                System.out.println();
+            }
+            
+            System.out.println();
+            System.out.println("Expected:");
+            System.out.println(expected);
+            System.out.println("Result:");
+            System.out.println(result);
+            System.out.println();
+        }
+        
+        assertTrue(match);
+        
 //            System.out.println("Processing " + fileIn);
 //            RdfDataset dataIn = Rdf.createReader(MediaType.N_QUADS, RdfCanonicalizerTest.class.getClassLoader().getResourceAsStream(fileIn)).readDataset();
 //            RdfDataset dataOut = Rdf.createReader(MediaType.N_QUADS, RdfCanonicalizerTest.class.getClassLoader().getResourceAsStream(fileOut)).readDataset();

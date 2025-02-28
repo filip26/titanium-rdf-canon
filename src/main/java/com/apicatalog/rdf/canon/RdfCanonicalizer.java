@@ -21,6 +21,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.function.Consumer;
 
+import com.apicatalog.rdf.api.RdfConsumerException;
 import com.apicatalog.rdf.api.RdfQuadConsumer;
 
 /**
@@ -69,14 +70,7 @@ public class RdfCanonicalizer implements RdfQuadConsumer, Consumer<RdfNQuad> {
         this.nquads = nquads;
     }
 
-    public static Collection<RdfNQuad> canonize(Collection<RdfNQuad> nquads) {
-        return newInstance(new ArrayList<>(nquads)).canonize();
-    }
-
-    /**
-     * Canonize
-     */
-    public Collection<RdfNQuad> canonize() {
+    public void provide(RdfQuadConsumer consumer) throws RdfConsumerException {
         // Step 3:
         setNonNormalized();
 
@@ -87,7 +81,7 @@ public class RdfCanonicalizer implements RdfQuadConsumer, Consumer<RdfNQuad> {
         issueNDegreeIds();
 
         // Step 7:
-        return makeCanonQuads();
+        makeCanonQuads(consumer);
     }
 
     @Override
@@ -259,7 +253,7 @@ public class RdfCanonicalizer implements RdfQuadConsumer, Consumer<RdfNQuad> {
         }
     }
 
-    private Collection<RdfNQuad> makeCanonQuads() {
+    protected void makeCanonQuads(RdfQuadConsumer consumer) throws RdfConsumerException {
 
         // relabel blank nodes
         for (String blankNodeId : blankIdToQuadSet.keySet()) {
@@ -271,7 +265,14 @@ public class RdfCanonicalizer implements RdfQuadConsumer, Consumer<RdfNQuad> {
 
         Collections.sort(nquads, RdfNQuadComparator.asc());
 
-        return nquads;
+        for (RdfNQuad nquad : nquads) {
+            
+            if (nquad.getObject().isLiteral()) {
+                
+            } else {
+                consumer.quad(nquad.getSubject().getValue(), nquad.getPredicate().getValue(), nquad.getPredicate().getValue(), nquad.getGraphName().map(RdfResource::getValue).orElse(null));
+            }
+        };
     }
 
     /**

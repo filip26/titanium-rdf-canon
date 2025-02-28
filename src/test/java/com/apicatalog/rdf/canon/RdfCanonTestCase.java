@@ -16,31 +16,37 @@
 package com.apicatalog.rdf.canon;
 
 import jakarta.json.JsonObject;
+import jakarta.json.JsonValue.ValueType;
 
 class RdfCanonTestCase {
 
     public enum Type {
-        RDFC10MapTest, 
+        RDFC10MapTest,
         RDFC10EvalTest
     }
 
     String id;
-    String name;
     Type type;
-    
+
+    String name;
+    String comment;
+
     String input;
     String expected;
 
     static final RdfCanonTestCase of(JsonObject json) {
 
-        final RdfCanonTestCase testCase = new RdfCanonTestCase();        
+        final RdfCanonTestCase testCase = new RdfCanonTestCase();
 
-        testCase.id = json.getJsonString("id").getString();
-        testCase.type = Type.valueOf(json.getJsonString("type").getString().substring("rdfc:".length()));
-        testCase.name = json.getJsonString("name").getString();
-        testCase.input = json.getJsonString("action").getString();
-        testCase.expected = json.getJsonString("result").getString();
-        
+        testCase.id = json.getString("id");
+        testCase.type = Type.valueOf(json.getString("type").substring("rdfc:".length()));
+        testCase.name = json.getString("name");
+        testCase.comment = json.containsKey("comment") && ValueType.STRING.equals(json.get("comment").getValueType())
+                ? json.getString("comment")
+                : null;
+        testCase.input = json.getString("action");
+        testCase.expected = json.getString("result");
+
         return testCase;
     }
 
