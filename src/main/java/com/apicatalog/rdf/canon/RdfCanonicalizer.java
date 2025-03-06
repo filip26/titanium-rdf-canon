@@ -56,33 +56,43 @@ public class RdfCanonicalizer {
     /** All the n-quads in the dataset to be processed. */
     private final Collection<RdfNQuad> nquads;
 
-    /** An instance of the SHA-256 message digest algorithm. */
-    private final MessageDigest sha256;
+    /** An instance of a message digest algorithm (SHA-256 or SHA-384). */
+    private final MessageDigest digest;
 
     /** A set of non-normalized values. */
     private HashSet<RdfValue> nonNormalized;
 
-    private RdfCanonicalizer(Collection<RdfNQuad> nquads, MessageDigest sha256) {
+    private RdfCanonicalizer(Collection<RdfNQuad> nquads, MessageDigest digest) {
         this.nquads = nquads;
-        this.sha256 = sha256;
+        this.digest = digest;
     }
 
     /**
      * Create a new {@link RdfCanonicalizer} instance.
      * 
      * @param nquads to canonicalize
+     * @param hashAlgorithm the hash algorithm, either SHA-256 or SHA-384
      * @return a new instance
      */
-    public static RdfCanonicalizer newInstance(Collection<RdfNQuad> nquads) {
+    public static RdfCanonicalizer newInstance(Collection<RdfNQuad> nquads, String hashAlgorithm) {
         try {
             return new RdfCanonicalizer(
                     nquads,
-                    MessageDigest.getInstance("SHA-256"));
+                    MessageDigest.getInstance(hashAlgorithm));
         } catch (NoSuchAlgorithmException e) {
-            // The Java specification requires SHA-256 is included, so this should never
-            // happen.
-            throw new InternalError("SHA-256 is not available", e);
+            // The Java specification requires SHA-256 is included
+            throw new InternalError(hashAlgorithm + " is not available", e);
         }
+    }
+
+    /**
+     * Create a new {@link RdfCanonicalizer} instance.
+     *
+     * @param nquads to canonicalize
+     * @return a new instance
+     */
+    public static RdfCanonicalizer newInstance(Collection<RdfNQuad> nquads) {
+        return RdfCanonicalizer.newInstance(nquads, "SHA-256");
     }
 
     /**
@@ -157,11 +167,11 @@ public class RdfCanonicalizer {
         Arrays.sort(nQuads);
 
         // Create the hash
-        sha256.reset();
+        digest.reset();
         for (String s : nQuads) {
-            sha256.update(s.getBytes(StandardCharsets.UTF_8));
+            digest.update(s.getBytes(StandardCharsets.UTF_8));
         }
-        return hex(sha256.digest());
+        return hex(digest.digest());
     }
 
     private static String forBlank(RdfNQuad q0, RdfValue blankId) {
@@ -425,8 +435,8 @@ public class RdfCanonicalizer {
                 issuer = chosenIssuer;
             }
 
-            sha256.reset();
-            String hash = hex(sha256.digest(dataToHash.toString().getBytes(StandardCharsets.UTF_8)));
+            digest.reset();
+            String hash = hex(digest.digest(dataToHash.toString().getBytes(StandardCharsets.UTF_8)));
             return new NDegreeResult(hash, issuer);
         }
 
@@ -456,13 +466,13 @@ public class RdfCanonicalizer {
             }
 
             // Create the hash of position, predicate and ID.
-            sha256.reset();
-            sha256.update(position.tag());
+            digest.reset();
+            digest.update(position.tag());
             if (position != Position.GRAPH) {
-                sha256.update(quad.getPredicate().toString().getBytes(StandardCharsets.UTF_8));
+                digest.update(quad.getPredicate().toString().getBytes(StandardCharsets.UTF_8));
             }
-            sha256.update(id.getBytes(StandardCharsets.UTF_8));
-            return hex(sha256.digest());
+            digest.update(id.getBytes(StandardCharsets.UTF_8));
+            return hex(digest.digest());
         }
     }
 }
