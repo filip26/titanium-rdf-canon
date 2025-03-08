@@ -22,7 +22,8 @@ class RdfCanonTestCase {
 
     public enum Type {
         RDFC10MapTest,
-        RDFC10EvalTest
+        RDFC10EvalTest,
+        RDFC10NegativeEvalTest
     }
 
     String id;
@@ -45,7 +46,9 @@ class RdfCanonTestCase {
                 ? json.getString("comment")
                 : null;
         testCase.input = json.getString("action");
-        testCase.expected = json.getString("result");
+        testCase.expected = json.containsKey("result")
+                ? json.getString("result")
+                : null;
 
         return testCase;
     }
