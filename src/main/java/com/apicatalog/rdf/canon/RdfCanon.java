@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -60,16 +59,16 @@ public class RdfCanon implements RdfQuadConsumer {
     /** All the n-quads in the dataset to be processed. */
     private final List<RdfNQuad> nquads;
 
-    /** An instance of the SHA-256 message digest algorithm. */
-    private final MessageDigest sha256;
+    /** An instance of a message digest algorithm (SHA-256, SHA-384, or custom). */
+    private final MessageDigest digest;
 
     /** A set of non-normalized values. */
     private HashSet<String> nonNormalized;
 
-    protected RdfCanon(Map<String, Collection<RdfNQuad>> blankIdToQuadSet, Map<String, RdfResource> resources, MessageDigest sha256, List<RdfNQuad> nquads) {
+    protected RdfCanon(Map<String, Collection<RdfNQuad>> blankIdToQuadSet, Map<String, RdfResource> resources, MessageDigest digest, List<RdfNQuad> nquads) {
         this.blankIdToQuadSet = blankIdToQuadSet;
         this.resources = resources;
-        this.sha256 = sha256;
+        this.digest = digest;
         this.nquads = nquads;
     }
 
@@ -134,23 +133,30 @@ public class RdfCanon implements RdfQuadConsumer {
 //        nquads.add(clone);
 //    }
 
-    public static RdfCanon create() {
-        return newInstance(new ArrayList<>());
-    }
 
-    protected static RdfCanon newInstance(List<RdfNQuad> nquads) {
+    /**
+     * @param hashAlgorithm the hash algorithm, either SHA-256 or SHA-384
+     * @return
+     */
+    public static RdfCanon create(String hashAlgorithm) {
         try {
-            return new RdfCanon(
-                    new HashMap<>(),
-                    new HashMap<>(),
-                    MessageDigest.getInstance("SHA-256"),
-                    nquads);
+            return create(MessageDigest.getInstance(hashAlgorithm));
 
         } catch (NoSuchAlgorithmException e) {
-            // The Java specification requires SHA-256 is included, so this should never
-            // happen.
-            throw new InternalError("SHA-256 is not available", e);
+            throw new IllegalStateException(hashAlgorithm + " is not available", e);
         }
+    }
+
+    public static RdfCanon create(MessageDigest digest) {
+        return newInstance(new ArrayList<>(), digest);
+    }
+
+    protected static RdfCanon newInstance(List<RdfNQuad> nquads, MessageDigest digest) {
+        return new RdfCanon(
+                new HashMap<>(),
+                new HashMap<>(),
+                digest,
+                nquads);
     }
 
     protected String forBlank(RdfNQuad q0, String blankNodeId) {
@@ -201,11 +207,11 @@ public class RdfCanon implements RdfQuadConsumer {
         Arrays.sort(nQuads);
 
         // Create the hash
-        sha256.reset();
+        digest.reset();
         for (String s : nQuads) {
-            sha256.update(s.getBytes(StandardCharsets.UTF_8));
+            digest.update(s.getBytes(StandardCharsets.UTF_8));
         }
-        return hex(sha256.digest());
+        return hex(digest.digest());
     }
 
     protected void issueSimpleIds() {
@@ -467,8 +473,8 @@ public class RdfCanon implements RdfQuadConsumer {
                 issuer = chosenIssuer;
             }
 
-            sha256.reset();
-            String hash = hex(sha256.digest(dataToHash.toString().getBytes(StandardCharsets.UTF_8)));
+            digest.reset();
+            String hash = hex(digest.digest(dataToHash.toString().getBytes(StandardCharsets.UTF_8)));
             return new NDegreeResult(hash, issuer);
         }
 
@@ -498,13 +504,13 @@ public class RdfCanon implements RdfQuadConsumer {
             }
 
             // Create the hash of position, predicate and ID.
-            sha256.reset();
-            sha256.update(position.tag());
+            digest.reset();
+            digest.update(position.tag());
             if (position != Position.GRAPH) {
-                sha256.update(quad.getPredicate().toString().getBytes(StandardCharsets.UTF_8));
+                digest.update(quad.getPredicate().toString().getBytes(StandardCharsets.UTF_8));
             }
-            sha256.update(id.getBytes(StandardCharsets.UTF_8));
-            return hex(sha256.digest());
+            digest.update(id.getBytes(StandardCharsets.UTF_8));
+            return hex(digest.digest());
         }
     }
 

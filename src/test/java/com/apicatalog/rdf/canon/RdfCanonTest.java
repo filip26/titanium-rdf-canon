@@ -28,7 +28,6 @@ import com.apicatalog.rdf.nquads.NQuadsWriter;
 import jakarta.json.Json;
 import jakarta.json.JsonObject;
 import jakarta.json.JsonReader;
-import jakarta.json.JsonValue;
 import jakarta.json.JsonValue.ValueType;
 import jakarta.json.stream.JsonParser;
 
@@ -38,9 +37,10 @@ class RdfCanonTest {
     @ParameterizedTest(name = "{0}")
     @MethodSource("data")
     void testCanonize(RdfCanonTestCase testCase) throws IOException {
+        execute(RdfCanon.create("SHA-256"), testCase);
+    }
 
-        final RdfCanon canon = RdfCanon.create();
-
+    static final void execute(RdfCanon canon, RdfCanonTestCase testCase) throws IOException {
         try (final Reader reader = new InputStreamReader(RdfCanonTest.class.getResourceAsStream(testCase.input))) {
             new NQuadsReader(reader).provide(canon);
         } catch (NQuadsReaderException | RdfConsumerException e) {
