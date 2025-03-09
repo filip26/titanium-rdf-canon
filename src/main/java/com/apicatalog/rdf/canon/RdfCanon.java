@@ -231,8 +231,8 @@ public final class RdfCanon implements RdfQuadConsumer {
         makeCanonQuads(consumer);
     }
 
-    public Map<String, String> mappingTable() {
-        return canonIssuer.mappingTable();
+    public Map<String, String> mapping() {
+        return canonIssuer.mapping();
     }
 
     @Override

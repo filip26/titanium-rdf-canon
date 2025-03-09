@@ -86,7 +86,7 @@ class RdfCanonTest {
 
     static final void assertMap(RdfCanonTestCase testCase, RdfCanon canon, String expected) {
 
-        final Map<String, String> resultMap = canon.mappingTable();
+        final Map<String, String> resultMap = canon.mapping();
 
         boolean match = false;
 

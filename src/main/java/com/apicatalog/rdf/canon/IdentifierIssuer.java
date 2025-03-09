@@ -102,7 +102,7 @@ public class IdentifierIssuer {
      * 
      * @return a mapping table
      */
-    public Map<String, String> mappingTable() {
+    public Map<String, String> mapping() {
         return existing;
     }
 }
