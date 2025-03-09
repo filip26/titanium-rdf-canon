@@ -180,6 +180,6 @@ class RdfCanonTest {
         for (int length; (length = is.read(buffer)) != -1;) {
             result.write(buffer, 0, length);
         }
-        return result.toString(StandardCharsets.UTF_8);
+        return result.toString(StandardCharsets.UTF_8.name());
     }
 }

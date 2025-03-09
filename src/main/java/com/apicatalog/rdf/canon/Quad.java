@@ -21,7 +21,7 @@ final class Quad {
     String nquad;
 
     void init() {
-        this.nquad = NQuadsWriter.nquad(subject(), predicate, object(), datatype, language, direction, graph());
+        this.nquad = NQuadsWriter.nquad(subject, predicate, object, datatype, language, direction, graph);
     }
 
     void update() {
