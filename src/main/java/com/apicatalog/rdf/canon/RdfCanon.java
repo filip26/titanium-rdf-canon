@@ -21,7 +21,6 @@ import java.util.TreeMap;
 
 import com.apicatalog.rdf.api.RdfConsumerException;
 import com.apicatalog.rdf.api.RdfQuadConsumer;
-import com.apicatalog.rdf.nquads.NQuadsAlphabet;
 import com.apicatalog.rdf.nquads.NQuadsWriter;
 
 /**
@@ -293,22 +292,6 @@ public class RdfCanon implements RdfQuadConsumer {
 
     private NDegreeResult hashNDegreeQuads(String id, IdentifierIssuer issuer) {
         return new HashNDegreeQuads().hash(id, issuer);
-    }
-
-
-    @Override
-    public RdfQuadConsumer quad(String subject, String predicate, String object, String graph) {
-        return quad(subject, predicate, object, null, null, null, graph);
-    }
-
-    @Override
-    public RdfQuadConsumer quad(String subject, String predicate, String literal, String datatype, String graph) {
-        return quad(subject, predicate, literal, datatype, null, null, graph);
-    }
-
-    @Override
-    public RdfQuadConsumer quad(String subject, String predicate, String literal, String language, String direction, String graph) {
-        return quad(subject, predicate, literal, NQuadsAlphabet.LANG_STRING, language, direction, graph);
     }
 
     protected final void setResource(final Position position, final Quad quad, final String name) {

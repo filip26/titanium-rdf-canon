@@ -43,6 +43,7 @@ class RdfCanonTest {
         try (final Reader reader = new InputStreamReader(RdfCanonTest.class.getResourceAsStream(testCase.input))) {
             new NQuadsReader(reader).provide(canon);
         } catch (NQuadsReaderException | RdfConsumerException e) {
+            e.printStackTrace();
             fail(e);
         }
 
