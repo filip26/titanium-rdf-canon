@@ -1,11 +1,7 @@
 package com.apicatalog.rdf.canon;
 
 import java.util.LinkedHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import com.apicatalog.rdf.Rdf;
-import com.apicatalog.rdf.RdfResource;
-import com.apicatalog.rdf.RdfValue;
+import java.util.Map;
 
 /**
  * An issuer of counted identifiers to map identifiers from one naming scheme to
@@ -16,13 +12,13 @@ import com.apicatalog.rdf.RdfValue;
 public class IdentifierIssuer {
 
     /** Identifiers that have already been issued. */
-    private final LinkedHashMap<RdfResource, RdfResource> existing = new LinkedHashMap<>();
+    private final Map<String, String> existing;
 
     /** The prefix for new identifiers. */
     private final String prefix;
 
     /** Counter for creating new identifiers. */
-    private int counter = 0;
+    private int counter;
 
     /**
      * Create a new instance.
@@ -30,7 +26,13 @@ public class IdentifierIssuer {
      * @param prefix the prefix for new identifiers.
      */
     public IdentifierIssuer(String prefix) {
+        this(prefix, new LinkedHashMap<>(), 0);
+    }
+
+    public IdentifierIssuer(String prefix, Map<String, String> mapping, int counter) {
         this.prefix = prefix;
+        this.existing = mapping;
+        this.counter = counter;
     }
 
     /**
@@ -55,9 +57,8 @@ public class IdentifierIssuer {
         return newIssuer;
     }
 
-    private RdfResource getForBlank(RdfResource value, AtomicBoolean flag) {
+    private String getForBlank(String value) {
         if (hasId(value)) {
-            flag.set(true);
             return getId(value);
         }
         return value;
@@ -70,32 +71,19 @@ public class IdentifierIssuer {
      *
      * @return the new ID
      */
-    public RdfResource getId(RdfResource id) {
-        return existing.computeIfAbsent(id, k -> Rdf.createBlankNode(prefix + (counter++)));
+    public String getId(String id) {
+        return existing.computeIfAbsent(id, k -> (prefix + (counter++)));
     }
 
     /**
      * Get the resource replaced by a proper blank identifier if appropriate.
      *
      * @param value the resource to check
-     * @param flag  set to true if a replacement happens
      *
      * @return the value or the replaced value
      */
-    public RdfResource getIfExists(RdfResource value, AtomicBoolean flag) {
-        return (value != null && value.isBlankNode()) ? getForBlank(value, flag) : value;
-    }
-
-    /**
-     * Get the resource replaced by a proper blank identifier if appropriate.
-     *
-     * @param value the resource to check
-     * @param flag  set to true if a replacement happens
-     *
-     * @return the value or the replaced value
-     */
-    RdfValue getIfExists(RdfValue value, AtomicBoolean flag) {
-        return (value != null && value.isBlankNode()) ? getForBlank((RdfResource) value, flag) : value;
+    public String getIfExists(String value) {
+        return value != null ? getForBlank(value) : value;
     }
 
     /**
@@ -105,7 +93,7 @@ public class IdentifierIssuer {
      *
      * @return true of a new ID has been allocated for this old ID.
      */
-    public boolean hasId(RdfResource id) {
+    public boolean hasId(String id) {
         return existing.containsKey(id);
     }
 
@@ -114,7 +102,7 @@ public class IdentifierIssuer {
      * 
      * @return a mapping table
      */
-    public LinkedHashMap<RdfResource, RdfResource> mappingTable() {
+    public Map<String, String> mappingTable() {
         return existing;
     }
 }

@@ -3,17 +3,15 @@ package com.apicatalog.rdf.canon;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-import com.apicatalog.rdf.RdfResource;
-
 /**
  * Iterate over all possible permutations of an array.
  *
  * @author Simon Greatrix on 06/10/2020.
  */
-class Permutator implements Iterator<RdfResource[]> {
+final class Permutator implements Iterator<String[]> {
 
     /** The array we are permuting. */
-    private final RdfResource[] array;
+    private final String[] array;
 
     /** Counts for Heap's algorithm. */
     private final short[] count;
@@ -24,7 +22,7 @@ class Permutator implements Iterator<RdfResource[]> {
     /** State for Heap's algorithm. */
     private int state = 0;
 
-    Permutator(RdfResource[] input) {
+    Permutator(String[] input) {
         array = input.clone();
         count = new short[array.length];
     }
@@ -35,12 +33,12 @@ class Permutator implements Iterator<RdfResource[]> {
     }
 
     @Override
-    public RdfResource[] next() {
+    public String[] next() {
         if (!nextExists) {
             throw new NoSuchElementException();
         }
 
-        RdfResource[] output = array.clone();
+        String[] output = array.clone();
 
         // Implementation of Heap's Algorithm
         while (state < array.length) {
@@ -65,10 +63,9 @@ class Permutator implements Iterator<RdfResource[]> {
         return output;
     }
 
-    private void swap(int i, int j) {
-        RdfResource t = array[i];
+    void swap(int i, int j) {
+        String t = array[i];
         array[i] = array[j];
         array[j] = t;
     }
-
 }

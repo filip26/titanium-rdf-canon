@@ -6,9 +6,6 @@ import java.util.Arrays;
 
 import org.junit.jupiter.api.Test;
 
-import com.apicatalog.rdf.Rdf;
-import com.apicatalog.rdf.RdfResource;
-
 /**
  * @author Simon Greatrix on 06/10/2020.
  */
@@ -16,11 +13,11 @@ class PermutatorTest {
 
     @Test
     void test() {
-        Permutator permutator = new Permutator(new RdfResource[] {
-                Rdf.createBlankNode("_:s"),
-                Rdf.createBlankNode("_:e"),
-                Rdf.createBlankNode("_:t"),
-                Rdf.createBlankNode("_:l")
+        Permutator permutator = new Permutator(new String[] {
+                "_:s",
+                "_:e",
+                "_:t",
+                "_:l"
         });
         StringBuilder builder = new StringBuilder();
         while (permutator.hasNext()) {
