@@ -4,6 +4,8 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Set;
 
+import com.apicatalog.rdf.api.RdfQuadConsumer;
+
 /**
  * Enumeration of positions in an RDF quad.
  *
@@ -13,40 +15,56 @@ enum Position {
     /** The subject of the quad. */
     SUBJECT('s', 0) {
         @Override
-        public boolean isBlank(RdfNQuad quad) {
-            return quad.getSubject().isBlankNode();
+        String get(Quad quad) {
+            return quad.subject();
         }
 
         @Override
-        String get(RdfNQuad quad) {
-            return quad.getSubject().getValue();
+        void set(Quad quad, String value, Blank blank) {
+            quad.subject = value;
+            quad.blankSubject = blank;
         }
 
+        @Override
+        public boolean isBlank(Quad quad) {
+            return quad.blankSubject != null;
+        }
     },
 
     /** The object of the quad. */
     OBJECT('o', 2) {
         @Override
-        String get(RdfNQuad quad) {
-            return quad.getObject().getValue();
+        String get(Quad quad) {
+            return quad.object();
         }
 
         @Override
-        public boolean isBlank(RdfNQuad quad) {
-            return quad.getObject().isBlankNode();
+        public boolean isBlank(Quad quad) {
+            return RdfQuadConsumer.isBlank(quad.object);
+        }
+
+        @Override
+        void set(Quad quad, String value, Blank blank) {
+            quad.object = value;
+            quad.blankObject = blank;
         }
     },
 
     /** The graph the quad belongs to. */
     GRAPH('g', 3) {
         @Override
-        String get(RdfNQuad quad) {
-            return quad.getGraphName().map(RdfResource::getValue).orElse(null);
+        String get(Quad quad) {
+            return quad.graph();
         }
 
         @Override
-        public boolean isBlank(RdfNQuad quad) {
-            return quad.getGraphName().filter(RdfValue::isBlankNode).isPresent();
+        public boolean isBlank(Quad quad) {
+            return RdfQuadConsumer.isBlank(quad.graph);
+        }
+        
+        void set(Quad quad, String value, Blank blank) {
+            quad.graph = value;
+            quad.blankGraph = blank;
         }
     },
 
@@ -56,14 +74,19 @@ enum Position {
      */
     PREDICATE('p', 1) {
         @Override
-        String get(RdfNQuad quad) {
-            return quad.getPredicate().getValue();
+        String get(Quad quad) {
+            return quad.predicate;
         }
 
         @Override
-        public boolean isBlank(RdfNQuad quad) {
+        public boolean isBlank(Quad quad) {
             // predicates cannot be blank
             return false;
+        }
+        
+        void set(Quad quad, String value, Blank blank) {
+            assert(blank == null);
+            quad.predicate = value;
         }
     };
 
@@ -90,7 +113,7 @@ enum Position {
      *
      * @return the value at this position
      */
-    abstract String get(RdfNQuad quad);
+    abstract String get(Quad quad);
 
     /**
      * Is the value at this position in the quad a blank node identifier?.
@@ -99,8 +122,10 @@ enum Position {
      *
      * @return true if this position holds a blank node identifier.
      */
-    abstract boolean isBlank(RdfNQuad quad);
+    abstract boolean isBlank(Quad quad);
 
+    abstract void set(Quad quad, String value, Blank blank);
+    
     /**
      * Get the tag to include in hashes to represent this position.
      *

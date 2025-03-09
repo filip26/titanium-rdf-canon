@@ -12,7 +12,6 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
-import java.util.Collection;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -78,32 +77,10 @@ class RdfCanonTest {
             }
 
         } catch (RdfConsumerException e) {
-
-            if (RdfCanonTestCase.Type.RDFC10NegativeEvalTest == testCase.type) {
-                return;
+            if (RdfCanonTestCase.Type.RDFC10NegativeEvalTest != testCase.type) {
+                fail(e);
             }
-            fail(e);
         }
-//            System.out.println("Processing " + fileIn);
-//            RdfDataset dataIn = Rdf.createReader(MediaType.N_QUADS, RdfCanonicalizerTest.class.getClassLoader().getResourceAsStream(fileIn)).readDataset();
-//            RdfDataset dataOut = Rdf.createReader(MediaType.N_QUADS, RdfCanonicalizerTest.class.getClassLoader().getResourceAsStream(fileOut)).readDataset();
-//
-//            
-//            RdfCanonicalizer can = RdfCanonicalizer.newInstance();
-//
-//            dataIn.toList().forEach(can::accept);
-//
-//            Collection<RdfNQuad> processed = can.canonize();
-//            
-////            Collection<RdfNQuad> processed = RdfCanonicalizer.canonize(dataIn.toList());
-//
-//            // processed and dataOut should be identical
-//            assertEquals(dataOut.size(), processed.size(), "Datasets must be same size");
-//            
-//            assertTrue(checkGraph(dataOut.toList(), processed));
-
-//            System.out.println("Processing " + fileIn + "   PASSED");
-//        }
     }
 
     static final void assertMap(RdfCanonTestCase testCase, RdfCanon canon, String expected, String result) {
@@ -166,8 +143,6 @@ class RdfCanonTest {
             }
 
             System.out.println();
-            System.out.println("Input:");
-            System.out.println(expected);
             System.out.println("Expected:");
             System.out.println(expected);
             System.out.println("Result:");
@@ -196,21 +171,6 @@ class RdfCanonTest {
                     .map(JsonObject.class::cast)
                     .map(RdfCanonTestCase::of);
         }
-    }
-
-    static boolean checkGraph(Collection<RdfNQuad> out, Collection<RdfNQuad> processed) {
-        for (RdfNQuad t : processed) {
-            if (!out.contains(t)) {
-                System.err.println("Generated nquad not found in expected output:");
-                System.err.println(t.toString());
-                System.err.println("Possible matches:");
-                for (RdfNQuad t0 : out) {
-                    System.err.println(t0.toString());
-                }
-                return false;
-            }
-        }
-        return true;
     }
 
     static final String isToString(InputStream is) throws IOException {

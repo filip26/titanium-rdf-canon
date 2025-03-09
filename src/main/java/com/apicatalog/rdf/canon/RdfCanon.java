@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -14,13 +15,14 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Optional;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
 import com.apicatalog.rdf.api.RdfConsumerException;
 import com.apicatalog.rdf.api.RdfQuadConsumer;
+import com.apicatalog.rdf.nquads.NQuadsAlphabet;
+import com.apicatalog.rdf.nquads.NQuadsWriter;
 
 /**
  * A Standard RDF Dataset Canonicalization Algorithm
@@ -39,14 +41,15 @@ public class RdfCanon implements RdfQuadConsumer {
      */
     private static final char[] HEX = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
 
-    private static final RdfResource BLANK_A = Rdf.createBlankNode("_:a");
+    private static final String BLANK_A = "_:a";
 
-    private static final RdfResource BLANK_Z = Rdf.createBlankNode("_:z");
+    private static final String BLANK_Z = "_:z";
 
     /** Map of blank IDs to all the quads that reference that specific blank ID. */
-    protected final Map<String, Collection<RdfNQuad>> blankIdToQuadSet;
+    protected final Map<String, Collection<Quad>> blankIdToQuadSet;
 
-    protected final Map<String, RdfResource> resources;
+    // TODO merge with issuer
+    protected final Map<String, Blank> blankNodes;
 
     /** Issuer of canonical IDs to blank nodes. */
     private final IdentifierIssuer canonIssuer = new IdentifierIssuer("_:c14n");
@@ -57,7 +60,7 @@ public class RdfCanon implements RdfQuadConsumer {
     private final Map<String, Set<String>> hashToBlankId = new TreeMap<>();
 
     /** All the n-quads in the dataset to be processed. */
-    private final List<RdfNQuad> nquads;
+    private final List<Quad> nquads;
 
     /** An instance of a message digest algorithm (SHA-256, SHA-384, or custom). */
     private final MessageDigest digest;
@@ -65,16 +68,25 @@ public class RdfCanon implements RdfQuadConsumer {
     /** A set of non-normalized values. */
     private HashSet<String> nonNormalized;
 
-    protected RdfCanon(Map<String, Collection<RdfNQuad>> blankIdToQuadSet, Map<String, RdfResource> resources, MessageDigest digest, List<RdfNQuad> nquads) {
+    protected RdfCanon(Map<String, Collection<Quad>> blankIdToQuadSet, Map<String, Blank> resources, MessageDigest digest, List<Quad> nquads) {
         this.blankIdToQuadSet = blankIdToQuadSet;
-        this.resources = resources;
+        this.blankNodes = resources;
         this.digest = digest;
         this.nquads = nquads;
     }
 
-    public void provide(RdfQuadConsumer consumer) throws RdfConsumerException {
-
-        System.out.println(nquads);
+    /**
+     * Emits canonical RDF quads to the given consumer. This method generates RDF
+     * quads in a canonical form and supplies them to the provided
+     * {@link RdfQuadConsumer}.
+     *
+     * @param consumer the {@link RdfQuadConsumer} that will receive the canonical
+     *                 RDF quads
+     * @throws RdfConsumerException  if an error occurs while processing or
+     *                               consuming RDF quads
+     * @throws IllegalStateException if the computation is terminated prematurely
+     */
+    public void provide(final RdfQuadConsumer consumer) throws RdfConsumerException {
 
         // Step 3:
         setNonNormalized();
@@ -88,51 +100,6 @@ public class RdfCanon implements RdfQuadConsumer {
         // Step 7:
         makeCanonQuads(consumer);
     }
-
-//    public void accept(final RdfNQuad nquad) {
-//
-//        MutableBlankNode[] blankNodes = new MutableBlankNode[4];
-//        boolean newNQuad = false;
-//
-//        for (Position position : Position.CAN_BE_BLANK) {
-//            if (position.isBlank(nquad)) {
-//                String blankNodeId = position.get(nquad);
-//                RdfValue blankNode = resources.get(blankNodeId);
-//                if (!(blankNode instanceof MutableBlankNode)) {
-//                    blankNodes[position.index()] = getMutableBlankNode(blankNode.getValue());
-//                    newNQuad = true;
-//
-//                } else {
-//                    blankNodes[position.index()] = (MutableBlankNode) blankNode;
-//                }
-//            }
-//        }
-//
-//        RdfNQuad clone = newNQuad
-//                ? Rdf.createNQuad(
-//                        blankNodes[0] != null
-//                                ? blankNodes[0]
-//                                : nquad.getSubject(),
-//                        nquad.getPredicate(),
-//                        blankNodes[2] != null
-//                                ? blankNodes[2]
-//                                : nquad.getObject(),
-//                        blankNodes[3] != null
-//                                ? blankNodes[3]
-//                                : nquad.getGraphName().orElse(null))
-//                : nquad;
-//
-//        for (MutableBlankNode blankNode : blankNodes) {
-//            if (blankNode != null) {
-//                blankIdToQuadSet.computeIfAbsent(
-//                        blankNode.getValue(),
-//                        k -> new LinkedList<>()).add(clone);
-//            }
-//        }
-//
-//        nquads.add(clone);
-//    }
-
 
     /**
      * @param hashAlgorithm the hash algorithm, either SHA-256 or SHA-384
@@ -151,7 +118,7 @@ public class RdfCanon implements RdfQuadConsumer {
         return newInstance(new ArrayList<>(), digest);
     }
 
-    protected static RdfCanon newInstance(List<RdfNQuad> nquads, MessageDigest digest) {
+    protected static RdfCanon newInstance(List<Quad> nquads, MessageDigest digest) {
         return new RdfCanon(
                 new HashMap<>(),
                 new HashMap<>(),
@@ -159,31 +126,32 @@ public class RdfCanon implements RdfQuadConsumer {
                 nquads);
     }
 
-    protected String forBlank(RdfNQuad q0, String blankNodeId) {
+    protected String forBlank(Quad q0, String blankNodeId) {
 
-        RdfResource subject = q0.getSubject();
-        if (subject.isBlankNode()) {
+        String subject = q0.subject;
+        if (q0.blankSubject != null) {
             // A blank node is always a resource
-            subject = subject.getValue().equals(blankNodeId) ? BLANK_A : BLANK_Z;
+            subject = subject.equals(blankNodeId) ? BLANK_A : BLANK_Z;
         }
 
-        RdfValue object = q0.getObject();
-        if (object.isBlankNode()) {
-            object = object.getValue().equals(blankNodeId) ? BLANK_A : BLANK_Z;
+        String object = q0.object;
+        if (q0.blankObject != null) {
+            object = object.equals(blankNodeId) ? BLANK_A : BLANK_Z;
         }
 
-        Optional<RdfResource> graph = q0.getGraphName();
-        if (graph.isPresent()) {
-            RdfResource g = graph.get();
-            if (g.isBlankNode()) {
-                graph = Optional.of(g.getValue().equals(blankNodeId) ? BLANK_A : BLANK_Z);
-            }
+        String graph = q0.graph;
+        if (q0.blankGraph != null) {
+            graph = graph.equals(blankNodeId) ? BLANK_A : BLANK_Z;
         }
 
-        // TODO
-//        NQuadsWriter.nquad(subject, q0.getPredicate(), object, graph.orElse(null));
-
-        return Rdf.createNQuad(subject, q0.getPredicate(), object, graph.orElse(null)).toString() + '\n';
+        return NQuadsWriter.nquad(
+                subject,
+                q0.predicate,
+                object,
+                q0.datatype,
+                q0.language,
+                q0.direction,
+                graph);
     }
 
     protected void setNonNormalized() {
@@ -192,13 +160,13 @@ public class RdfCanon implements RdfQuadConsumer {
 
     protected String hashFirstDegree(final String blankNodeId) {
 
-        Collection<RdfNQuad> related = blankIdToQuadSet.get(blankNodeId);
+        Collection<Quad> related = blankIdToQuadSet.get(blankNodeId);
         String[] nQuads = new String[related.size()];
         int i = 0;
 
         // Convert the NQuads to a consistent set by replacing the reference with _:a
         // and all others with _:z, and then sorting
-        for (RdfNQuad q0 : related) {
+        for (Quad q0 : related) {
             nQuads[i] = forBlank(q0, blankNodeId);
             i++;
         }
@@ -247,7 +215,7 @@ public class RdfCanon implements RdfQuadConsumer {
         for (Entry<String, Set<String>> entry : hashToBlankId.entrySet()) {
             List<NDegreeResult> hashPathList = new ArrayList<>();
             for (String id : entry.getValue()) {
-                if (counter > 10) {
+                if (counter > 100) {
                     throw new IllegalStateException();
                 }
                 counter++;
@@ -264,39 +232,48 @@ public class RdfCanon implements RdfQuadConsumer {
                 hashPathList.add(path);
             }
 
-//            hashPathList.sort(Comparator.naturalOrder());
-//            for (NDegreeResult result : hashPathList) {
-//                if (counter > 1000) {
-//                    throw new IllegalStateException();
-//                }
-//                counter++;
-//
-//                result.getIssuer().assign(canonIssuer);
-//            }
+            hashPathList.sort(Comparator.naturalOrder());
+            for (NDegreeResult result : hashPathList) {
+                if (counter > 1000) {
+                    throw new IllegalStateException();
+                }
+                counter++;
+
+                result.getIssuer().assign(canonIssuer);
+            }
         }
     }
 
     protected void makeCanonQuads(RdfQuadConsumer consumer) throws RdfConsumerException {
+        System.out.println("---");
         System.out.println(nquads);
+        System.out.println(mappingTable());
+
+        System.out.println("---");
+
         // relabel blank nodes
         for (String blankNodeId : blankIdToQuadSet.keySet()) {
 
-            MutableBlankNode blankNode = (MutableBlankNode) resources.get(blankNodeId);
-
-            blankNode.setValue(canonIssuer.getIfExists(blankNodeId));
+            Blank blankNode = blankNodes.get(blankNodeId);
+            // FIXME USE the same map
+            blankNode.canon = canonIssuer.getIfExists(blankNodeId);
+            System.out.println(">> " + blankNode.id + ", " + blankNode.canon);
         }
 
-        Collections.sort(nquads, RdfNQuadComparator.asc());
+        Collections.sort(nquads, QuadComparator.asc());
 
-        for (RdfNQuad nquad : nquads) {
-
-            if (nquad.getObject().isLiteral()) {
-
-            } else {
-                consumer.quad(nquad.getSubject().getValue(), nquad.getPredicate().getValue(), nquad.getObject().getValue(), nquad.getGraphName().map(RdfResource::getValue).orElse(null));
-            }
+        for (final Quad quad : nquads) {
+            System.out.println("|> " + quad.subject() + ", " + quad.subject + ", " + quad.blankSubject);
+            consumer.quad(
+                    quad.subject(),
+                    quad.predicate,
+                    quad.object(),
+                    quad.datatype,
+                    quad.language,
+                    quad.direction,
+                    quad.graph());
         }
-        ;
+
     }
 
     /**
@@ -316,6 +293,62 @@ public class RdfCanon implements RdfQuadConsumer {
 
     private NDegreeResult hashNDegreeQuads(String id, IdentifierIssuer issuer) {
         return new HashNDegreeQuads().hash(id, issuer);
+    }
+
+
+    @Override
+    public RdfQuadConsumer quad(String subject, String predicate, String object, String graph) {
+        return quad(subject, predicate, object, null, null, null, graph);
+    }
+
+    @Override
+    public RdfQuadConsumer quad(String subject, String predicate, String literal, String datatype, String graph) {
+        return quad(subject, predicate, literal, datatype, null, null, graph);
+    }
+
+    @Override
+    public RdfQuadConsumer quad(String subject, String predicate, String literal, String language, String direction, String graph) {
+        return quad(subject, predicate, literal, NQuadsAlphabet.LANG_STRING, language, direction, graph);
+    }
+
+    protected final void setResource(final Position position, final Quad quad, final String name) {
+
+        Blank blank = null;
+
+        if (RdfQuadConsumer.isBlank(name)) {
+            blank = blankNodes.computeIfAbsent(name, Blank::new);
+            blankIdToQuadSet.computeIfAbsent(name, k -> new LinkedList<>()).add(quad);
+        }
+
+        position.set(quad, name, blank);
+    }
+
+    public Map<String, String> mappingTable() {
+        return canonIssuer.mappingTable();
+    }
+
+    @Override
+    public RdfQuadConsumer quad(String subject, String predicate, String object, String datatype, String language, String direction, String graph) {
+
+        Quad quad = new Quad();
+        setResource(Position.SUBJECT, quad, subject);
+        quad.predicate = predicate;
+
+        if (RdfQuadConsumer.isLiteral(datatype, language, direction)) {
+
+            quad.object = object;
+            quad.datatype = datatype;
+            quad.language = language;
+            quad.direction = direction;
+
+        } else {
+            setResource(Position.OBJECT, quad, object);
+        }
+
+        setResource(Position.GRAPH, quad, graph);
+
+        nquads.add(quad);
+        return this;
     }
 
     /**
@@ -342,16 +375,16 @@ public class RdfCanon implements RdfQuadConsumer {
          * @param issuerCopy    the identifier issuer
          * @param recursionList the node recursion list
          */
-        private void appendToPath(RdfResource related, StringBuilder pathBuilder, IdentifierIssuer issuerCopy, List<MutableBlankNode> recursionList) {
-            if (canonIssuer.hasId(related.getValue())) {
+        private void appendToPath(String related, StringBuilder pathBuilder, IdentifierIssuer issuerCopy, List<String> recursionList) {
+            if (canonIssuer.hasId(related)) {
                 // 5.4.4.1: Already has a canonical ID so we just use it.
-                pathBuilder.append(canonIssuer.getId(related.getValue()));
+                pathBuilder.append(canonIssuer.getId(related));
             } else {
                 // 5.4.4.2: Need to try an ID, and possibly recurse
-                if (!issuerCopy.hasId(related.getValue())) {
-                    recursionList.add((MutableBlankNode) related);
+                if (!issuerCopy.hasId(related)) {
+                    recursionList.add(related);
                 }
-                pathBuilder.append(issuerCopy.getId(related.getValue()));
+                pathBuilder.append(issuerCopy.getId(related));
             }
         }
 
@@ -366,8 +399,8 @@ public class RdfCanon implements RdfQuadConsumer {
         private SortedMap<String, Set<String>> createHashToRelated(String id, IdentifierIssuer issuer) {
             SortedMap<String, Set<String>> hashToRelated = new TreeMap<>();
             // quads that refer to the blank node.
-            Collection<RdfNQuad> refer = blankIdToQuadSet.get(id);
-            for (RdfNQuad quad : refer) {
+            Collection<Quad> refer = blankIdToQuadSet.get(id);
+            for (Quad quad : refer) {
                 // find all the blank nodes that refer to this node by a quad
                 for (Position position : Position.CAN_BE_BLANK) {
                     if (position.isBlank(quad) && !id.equals(position.get(quad))) {
@@ -396,14 +429,14 @@ public class RdfCanon implements RdfQuadConsumer {
             // 5.4.1 to 5.4.3 : initialize variables
             IdentifierIssuer issuerCopy = issuer.copy();
             StringBuilder pathBuilder = new StringBuilder();
-            List<MutableBlankNode> recursionList = new ArrayList<>();
+            List<String> recursionList = new ArrayList<>();
 
             // 5.4.4: for every resource in the this permutation of the resources
             for (final String relatedId : permutation) {
 
-                RdfResource related = resources.get(relatedId);
+//                Quad.Blank related = resources.get(relatedId);
 
-                appendToPath(related, pathBuilder, issuerCopy, recursionList);
+                appendToPath(relatedId, pathBuilder, issuerCopy, recursionList);
 
                 // 5.4.4.3: Is this path better than our chosen path?
                 if (chosenPath.length() > 0 && pathBuilder.toString().compareTo(chosenPath.toString()) > 0) {
@@ -414,11 +447,11 @@ public class RdfCanon implements RdfQuadConsumer {
             }
 
             // 5.4.5: Process the recursion list
-            for (MutableBlankNode related : recursionList) {
-                NDegreeResult result = hashNDegreeQuads(related.getValue(), issuerCopy);
+            for (String related : recursionList) {
+                NDegreeResult result = hashNDegreeQuads(related, issuerCopy);
 
                 pathBuilder
-                        .append(issuerCopy.getId(related.getValue()))
+                        .append(issuerCopy.getId(related))
                         .append('<')
                         .append(result.getHash())
                         .append('>');
@@ -490,7 +523,7 @@ public class RdfCanon implements RdfQuadConsumer {
          */
         private String hashRelatedBlankNode(
                 String related,
-                RdfNQuad quad,
+                Quad quad,
                 IdentifierIssuer issuer,
                 Position position) {
             // Find an ID for the blank ID
@@ -507,103 +540,10 @@ public class RdfCanon implements RdfQuadConsumer {
             digest.reset();
             digest.update(position.tag());
             if (position != Position.GRAPH) {
-                digest.update(quad.getPredicate().toString().getBytes(StandardCharsets.UTF_8));
+                digest.update(NQuadsWriter.resource(quad.predicate).getBytes(StandardCharsets.UTF_8));
             }
             digest.update(id.getBytes(StandardCharsets.UTF_8));
             return hex(digest.digest());
         }
-    }
-
-    @Override
-    public RdfQuadConsumer quad(String subject, String predicate, String object, String graph) {
-        System.out.println("> " + subject + ", " + predicate + ", " + object + ", " + graph);
-
-        RdfResource rdfSubject = getResource(subject);
-        RdfResource rdfObject = getResource(object);
-        RdfResource rdfGraph = graph != null ? getResource(graph) : null;
-
-        RdfNQuad quad = Rdf.createNQuad(
-                rdfSubject,
-                getResource(predicate),
-                rdfObject,
-                rdfGraph);
-
-        if (rdfSubject.isBlankNode()) {
-            blankIdToQuadSet.computeIfAbsent(rdfSubject.getValue(), k -> new LinkedList<>()).add(quad);
-        }
-
-        if (rdfObject.isBlankNode()) {
-            blankIdToQuadSet.computeIfAbsent(rdfObject.getValue(), k -> new LinkedList<>()).add(quad);
-        }
-
-        if (rdfGraph != null && rdfGraph.isBlankNode()) {
-            blankIdToQuadSet.computeIfAbsent(rdfGraph.getValue(), k -> new LinkedList<>()).add(quad);
-        }
-
-        nquads.add(quad);
-
-        return this;
-    }
-
-    @Override
-    public RdfQuadConsumer quad(String subject, String predicate, String literal, String datatype, String graph) {
-        RdfResource rdfSubject = getResource(subject);
-        RdfResource rdfGraph = graph != null ? getResource(graph) : null;
-
-        RdfNQuad quad = Rdf.createNQuad(
-                rdfSubject,
-                getResource(predicate),
-                Rdf.createTypedString(literal, datatype),
-                rdfGraph);
-
-        if (rdfSubject.isBlankNode()) {
-            blankIdToQuadSet.computeIfAbsent(rdfSubject.getValue(), k -> new LinkedList<>()).add(quad);
-        }
-
-        if (rdfGraph != null && rdfGraph.isBlankNode()) {
-            blankIdToQuadSet.computeIfAbsent(rdfGraph.getValue(), k -> new LinkedList<>()).add(quad);
-        }
-
-        nquads.add(quad);
-
-        return this;
-    }
-
-    @Override
-    public RdfQuadConsumer quad(String subject, String predicate, String literal, String language, String direction, String graph) {
-        RdfResource rdfSubject = getResource(subject);
-        RdfResource rdfGraph = graph != null ? getResource(graph) : null;
-
-        RdfNQuad quad = Rdf.createNQuad(
-                rdfSubject,
-                getResource(predicate),
-                Rdf.createLangString(literal, language, direction),
-                rdfGraph);
-
-        if (rdfSubject.isBlankNode()) {
-            blankIdToQuadSet.computeIfAbsent(rdfSubject.getValue(), k -> new LinkedList<>()).add(quad);
-        }
-
-        if (rdfGraph != null && rdfGraph.isBlankNode()) {
-            blankIdToQuadSet.computeIfAbsent(rdfGraph.getValue(), k -> new LinkedList<>()).add(quad);
-        }
-
-        nquads.add(quad);
-
-        return this;
-    }
-
-    protected final RdfResource getResource(final String name) {
-        return resources.computeIfAbsent(name, arg0 -> name.startsWith("_:")
-                ? new MutableBlankNode(name)
-                : Rdf.createIRI(name));
-    }
-
-    protected final MutableBlankNode getMutableBlankNode(final String value) {
-        return (MutableBlankNode) resources.computeIfAbsent(value, arg0 -> new MutableBlankNode(value));
-    }
-
-    public Map<String, String> mappingTable() {
-        return canonIssuer.mappingTable();
     }
 }
