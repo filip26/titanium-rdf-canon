@@ -33,6 +33,18 @@ var mapping = canon.mapping();
 
 ```
 
+Use `RdfCanonTicker` to prematurely terminate computation.
+
+```javascript
+// Set a 5-second timeout (in milliseconds) after which computation will be terminated
+var canon = RdfCanon.create("SHA-256", new RdfCanonTimeTicker(5 * 1000));
+
+// Alternatively, set a custom ticker
+var canon = RdfCanon.create("SHA-256", () -> {
+    // This will be called during computation, starting from the very beginning
+});
+```
+
 ## Installation
 
 ### Maven
