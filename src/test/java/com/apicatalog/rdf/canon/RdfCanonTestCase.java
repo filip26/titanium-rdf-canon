@@ -35,6 +35,8 @@ class RdfCanonTestCase {
     String input;
     String expected;
 
+    String hashAlgorithm;
+    
     static final RdfCanonTestCase of(JsonObject json) {
 
         final RdfCanonTestCase testCase = new RdfCanonTestCase();
@@ -49,6 +51,9 @@ class RdfCanonTestCase {
         testCase.expected = json.containsKey("result")
                 ? json.getString("result")
                 : null;
+        testCase.hashAlgorithm = json.containsKey("hashAlgorithm")
+                ? ("SHA384".equals(json.getString("hashAlgorithm")) ? "SHA-384" : "UNKNOWN-FAIL")
+                : "SHA-256";
 
         return testCase;
     }
