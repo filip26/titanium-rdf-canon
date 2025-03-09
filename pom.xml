@@ -7,7 +7,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.apicatalog</groupId>
     <artifactId>titanium-rdfc</artifactId>
-    <version>2.0.0-SNAPSHOT</version>
+    <version>2.0.0</version>
     <packaging>jar</packaging>
 
     <name>Titanium RDF Dataset Canonicalization (RDFC 1.0)</name>
@@ -18,7 +18,7 @@
         An implementation of the W3C RDF Dataset Canonicalization Algorithm (RDFC 1.0)
     </description>
 
-    <url>https://github.com/filip26/titanium-rdfc</url>
+    <url>https://github.com/filip26/titanium-rdf-canon</url>
 
     <licenses>
         <license>
@@ -29,14 +29,14 @@
 
     <issueManagement>
         <system>github</system>
-        <url>https://github.com/filip26/titanium-rdfc/issues</url>
+        <url>https://github.com/filip26/titanium-rdf-canon/issues</url>
     </issueManagement>
 
     <scm>
-        <connection>scm:git:git://github.com/filip26/titanium-rdfc.git</connection>
+        <connection>scm:git:git://github.com/filip26/titanium-rdf-canon.git</connection>
         <developerConnection>
-            scm:git:git://github.com/filip26/titanium-rdfc.git</developerConnection>
-        <url>https://github.com/filip26/titanium-rdfc</url>
+            scm:git:git://github.com/filip26/titanium-rdf-canon.git</developerConnection>
+        <url>https://github.com/filip26/titanium-rdf-canon</url>
     </scm>
 
     <developers>

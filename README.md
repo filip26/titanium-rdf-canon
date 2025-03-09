@@ -1,24 +1,36 @@
 # Titanium RDF Dataset Canonicalization
 
-An implementation of the [W3C Standard RDF Dataset Canonicalization Algorithm (RDFC 1.0)](https://www.w3.org/TR/rdf-canon/) in Java. Originally a fork of [RDF-URDNA](https://github.com/setl/rdf-urdna).
+An implementation of the [W3C Standard RDF Dataset Canonicalization Algorithm (RDFC 1.0)](https://www.w3.org/TR/rdf-canon/) in Java. 
 
 [![Java 8 CI](https://github.com/filip26/titanium-rdf-canon/actions/workflows/java8-build.yml/badge.svg)](https://github.com/filip26/titanium-rdf-canon/actions/workflows/java8-build.yml)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/8682ccd0fb314ee8a237462c25373686)](https://app.codacy.com/gh/filip26/titanium-rdfc/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 [![Codacy Badge](https://app.codacy.com/project/badge/Coverage/8682ccd0fb314ee8a237462c25373686)](https://app.codacy.com/gh/filip26/titanium-rdfc/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_coverage)
 [![Maven Central](https://img.shields.io/maven-central/v/com.apicatalog/titanium-rdfc.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:com.apicatalog%20AND%20a:titanium-rdfc)
+[![javadoc](https://javadoc.io/badge2/com.apicatalog/titanium-rdfc/javadoc.svg)](https://javadoc.io/doc/com.apicatalog/titanium-rdfc)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 ## Examples
 
 ```javascript
+// Create a new canonicalizer instance
+var canon = RdfCanon.create("SHA-256");
 
-// Simple canonicalization
-Collection<RdfNQuad> norm = RdfCanonicalizer.canonicalize(Collection<RdfNQuad>);
+// Feed the canonicalizer with N-Quads
+(new NQuadsReader(...)).provide(canon);
 
-// Get an access to data related to canonicalization process.
-var canon = RdfCanonicalizer.canonicalize(Collection<RdfNQuad>);
-var norm = canon.canonicalize();
-var labels = canon.issuer().mappingTable();
+// Alternatively, manually add quads
+canon.quad(...).quad(..)...quad(...);
+
+// Get the canonicalized result
+canon.provide(...);
+
+// Get the canonicalized result as N-Quads
+var writer = new NQuadsWriter(...);
+canon.provide(writer);
+
+// Access data related to the canonicalization process
+var mapping = canon.mapping();
+
 ```
 
 ## Installation
@@ -28,26 +40,16 @@ var labels = canon.issuer().mappingTable();
 <dependency>
     <groupId>com.apicatalog</groupId>
     <artifactId>titanium-rdfc</artifactId>
-    <version>1.0.0</version>
+    <version>2.0.0</version>
 </dependency>
 
-<dependency>
-    <groupId>com.apicatalog</groupId>
-    <artifactId>titanium-json-ld</artifactId>
-    <version>1.4.1</version>
-</dependency>
-
-<dependency>
-    <groupId>org.glassfish</groupId>
-    <artifactId>jakarta.json</artifactId>
-    <version>2.0.1</version>
-</dependency>
 ```
 
+### Gradle
 
-## Documentation
-
-[![javadoc](https://javadoc.io/badge2/com.apicatalog/titanium-rdfc/javadoc.svg)](https://javadoc.io/doc/com.apicatalog/titanium-rdfc)
+```gradle
+implementation("com.apicatalog:titanium-rdfc:2.0.0")
+```
 
 ## Contributing
 
@@ -65,4 +67,5 @@ Fork and clone the project repository.
 ## Resources
 * [W3C Standard RDF Dataset Canonicalization Algorithm](https://www.w3.org/TR/rdf-canon/)
 * [Titanium JSON-LD](https://github.com/filip26/titanium-json-ld)
-
+* [Titanium N-QUADS](https://github.com/filip26/titanium-rdf-n-quads)
+* Originally a fork of [RDF-URDNA](https://github.com/setl/rdf-urdna).
