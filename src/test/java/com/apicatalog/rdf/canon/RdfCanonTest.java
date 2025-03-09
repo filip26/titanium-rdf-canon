@@ -52,9 +52,6 @@ class RdfCanonTest {
 
             canon.provide(new NQuadsWriter(writer));
 
-            String result = writer.toString();
-            assertNotNull(result);
-
             String expected = null;
 
             try (final InputStream is = RdfCanonTest.class.getResourceAsStream(testCase.expected)) {
@@ -65,11 +62,14 @@ class RdfCanonTest {
 
             switch (testCase.type) {
             case RDFC10EvalTest:
+                String result = writer.toString();
+                assertNotNull(result);
+
                 assertEval(testCase, expected, result);
                 break;
 
             case RDFC10MapTest:
-                assertMap(testCase, canon, expected, result);
+                assertMap(testCase, canon, expected);
                 break;
 
             case RDFC10NegativeEvalTest:
@@ -77,14 +77,14 @@ class RdfCanonTest {
                 break;
             }
 
-        } catch (RdfConsumerException | IllegalStateException  e ) {
+        } catch (RdfConsumerException | IllegalStateException e) {
             if (RdfCanonTestCase.Type.RDFC10NegativeEvalTest != testCase.type) {
                 fail(e);
             }
         }
     }
 
-    static final void assertMap(RdfCanonTestCase testCase, RdfCanon canon, String expected, String result) {
+    static final void assertMap(RdfCanonTestCase testCase, RdfCanon canon, String expected) {
 
         final Map<String, String> resultMap = canon.mappingTable();
 
