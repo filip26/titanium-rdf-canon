@@ -36,7 +36,7 @@ class RdfCanonTest {
     @ParameterizedTest(name = "{0}")
     @MethodSource("data")
     void testCanonize(RdfCanonTestCase testCase) throws IOException {
-        execute(RdfCanon.create(testCase.hashAlgorithm, new RdfCanonTimeTicker(2500)), testCase);
+        execute(RdfCanon.create(testCase.hashAlgorithm, new RdfCanonTimeTicker(300)), testCase);
     }
 
     static final void execute(RdfCanon canon, RdfCanonTestCase testCase) throws IOException {

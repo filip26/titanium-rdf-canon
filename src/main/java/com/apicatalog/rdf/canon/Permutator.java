@@ -8,7 +8,7 @@ import java.util.NoSuchElementException;
  *
  * @author Simon Greatrix on 06/10/2020.
  */
-class Permutator implements Iterator<String[]> {
+final class Permutator implements Iterator<String[]> {
 
     /** The array we are permuting. */
     private final String[] array;
@@ -63,7 +63,7 @@ class Permutator implements Iterator<String[]> {
         return output;
     }
 
-    private void swap(int i, int j) {
+    void swap(int i, int j) {
         String t = array[i];
         array[i] = array[j];
         array[j] = t;

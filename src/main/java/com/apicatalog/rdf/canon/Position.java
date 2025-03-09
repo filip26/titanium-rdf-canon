@@ -4,8 +4,6 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Set;
 
-import com.apicatalog.rdf.api.RdfQuadConsumer;
-
 /**
  * Enumeration of positions in an RDF quad.
  *
@@ -13,7 +11,7 @@ import com.apicatalog.rdf.api.RdfQuadConsumer;
  */
 enum Position {
     /** The subject of the quad. */
-    SUBJECT('s', 0) {
+    SUBJECT('s') {
         @Override
         String get(Quad quad) {
             return quad.subject();
@@ -32,7 +30,7 @@ enum Position {
     },
 
     /** The object of the quad. */
-    OBJECT('o', 2) {
+    OBJECT('o') {
         @Override
         String get(Quad quad) {
             return quad.object();
@@ -40,7 +38,7 @@ enum Position {
 
         @Override
         public boolean isBlank(Quad quad) {
-            return RdfQuadConsumer.isBlank(quad.object);
+            return quad.blankObject != null;
         }
 
         @Override
@@ -51,7 +49,7 @@ enum Position {
     },
 
     /** The graph the quad belongs to. */
-    GRAPH('g', 3) {
+    GRAPH('g') {
         @Override
         String get(Quad quad) {
             return quad.graph();
@@ -59,9 +57,9 @@ enum Position {
 
         @Override
         public boolean isBlank(Quad quad) {
-            return RdfQuadConsumer.isBlank(quad.graph);
+            return quad.graph != null;
         }
-        
+
         void set(Quad quad, String value, Blank blank) {
             quad.graph = value;
             quad.blankGraph = blank;
@@ -72,7 +70,7 @@ enum Position {
      * The predicate of the quad. Note the predicate is not used by the URDNA-2015
      * algorithm.
      */
-    PREDICATE('p', 1) {
+    PREDICATE('p') {
         @Override
         String get(Quad quad) {
             return quad.predicate;
@@ -83,9 +81,9 @@ enum Position {
             // predicates cannot be blank
             return false;
         }
-        
+
         void set(Quad quad, String value, Blank blank) {
-            assert(blank == null);
+            assert (blank == null);
             quad.predicate = value;
         }
     };
@@ -99,11 +97,9 @@ enum Position {
      * The tag used to represent the position in hashes.
      */
     private final byte tag;
-    private final int index;
 
-    Position(char ch, int index) {
+    Position(char ch) {
         this.tag = (byte) ch;
-        this.index = index;
     }
 
     /**
@@ -125,7 +121,7 @@ enum Position {
     abstract boolean isBlank(Quad quad);
 
     abstract void set(Quad quad, String value, Blank blank);
-    
+
     /**
      * Get the tag to include in hashes to represent this position.
      *
@@ -133,14 +129,5 @@ enum Position {
      */
     public byte tag() {
         return tag;
-    }
-
-    /**
-     * Get the position index in an nquad array. [subject, predicate, object, graph]
-     * 
-     * @return the index
-     */
-    public int index() {
-        return index;
     }
 }
