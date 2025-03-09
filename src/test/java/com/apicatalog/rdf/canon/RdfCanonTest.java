@@ -36,7 +36,7 @@ class RdfCanonTest {
     @ParameterizedTest(name = "{0}")
     @MethodSource("data")
     void testCanonize(RdfCanonTestCase testCase) throws IOException {
-        execute(RdfCanon.create("SHA-256"), testCase);
+        execute(RdfCanon.create("SHA-256", new RdfCanonTimeTicker(2500)), testCase);
     }
 
     static final void execute(RdfCanon canon, RdfCanonTestCase testCase) throws IOException {
@@ -77,7 +77,7 @@ class RdfCanonTest {
                 break;
             }
 
-        } catch (RdfConsumerException e) {
+        } catch (RdfConsumerException | IllegalStateException  e ) {
             if (RdfCanonTestCase.Type.RDFC10NegativeEvalTest != testCase.type) {
                 fail(e);
             }
