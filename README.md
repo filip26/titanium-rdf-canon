@@ -11,7 +11,6 @@ An implementation of the [W3C Standard RDF Dataset Canonicalization Algorithm (R
 
 For conformance with the specification, refer to the [RDF Dataset Canonicalization and Hash 1.0 Processor Conformance](https://w3c.github.io/rdf-canon/reports/) report.
 
-
 ## Examples
 
 ```javascript
