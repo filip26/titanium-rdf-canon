@@ -46,7 +46,7 @@ class EarlGenerator {
             tests.forEach(test -> {
                 try {
                     RdfCanonTest.execute(RdfCanon.create(test.hashAlgorithm, new RdfCanonTimeTicker(300)), test);
-                    printResult(writer, "https://w3c.github.io/rdf-canon/tests/manifest" + test.id, true);
+                    printResult(writer, test.id, true);
 
                 } catch (Throwable e) {
                     printResult(writer, test.id, false);
@@ -65,7 +65,7 @@ class EarlGenerator {
         writer.println("[ a earl:Assertion ;");
         writer.println("  earl:assertedBy <https://apicatalog.com> ;");
         writer.println("  earl:subject <" + REPOSITORY + "> ;");
-        writer.println("  earl:test <" + testUri + "> ;");
+        writer.println("  earl:test <https://w3c.github.io/rdf-canon/tests/manifest" +  testUri + "> ;");
         writer.println("  earl:result [");
         writer.println("    a earl:TestResult ;");
         writer.println("    earl:outcome " + (passed ? "earl:passed" : "earl:failed") + " ;");
