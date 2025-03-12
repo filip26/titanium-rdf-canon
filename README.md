@@ -9,6 +9,9 @@ An implementation of the [W3C Standard RDF Dataset Canonicalization Algorithm (R
 [![javadoc](https://javadoc.io/badge2/com.apicatalog/titanium-rdfc/javadoc.svg)](https://javadoc.io/doc/com.apicatalog/titanium-rdfc)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
+For conformance with the specification, refer to the [RDF Dataset Canonicalization and Hash 1.0 Processor Conformance](https://w3c.github.io/rdf-canon/reports/) report.
+
+
 ## Examples
 
 ```javascript
