@@ -56,7 +56,7 @@
         <argLine>-Dfile.encoding=UTF-8</argLine>
 
         <titanium.rdf.api.version>1.0.0</titanium.rdf.api.version>
-        <titanium.rdf.nquads.version>1.0.0</titanium.rdf.nquads.version>
+        <titanium.rdf.nquads.version>1.0.2</titanium.rdf.nquads.version>
 
         <!-- tests -->
         <junit.version>5.12.1</junit.version>
