@@ -228,11 +228,9 @@ public final class RdfCanon implements RdfQuadConsumer {
 	 * N-Quads in a canonical form and supplies them to the consumer.
 	 *
 	 * @param consumer the consumer that will receive the canonical RDF N-Quad
-	 * @throws RdfConsumerException  if an error occurs while processing or
-	 *                               consuming RDF quads
 	 * @throws IllegalStateException if the computation is terminated prematurely
 	 */
-	public void provide(final Consumer<String> consumer) throws RdfConsumerException {
+	public void provide(final Consumer<String> consumer) {
 		canonize().forEach(quad -> consumer.accept(quad.nquad));
 	}
 
@@ -240,11 +238,9 @@ public final class RdfCanon implements RdfQuadConsumer {
 	 * Canonicalizes RDF N-Quads into a canonical form and returns them.
 	 *
 	 * @return a collection of canonical RDF N-Quads
-	 * @throws RdfConsumerException  if an error occurs while processing or
-	 *                               consuming RDF quads
 	 * @throws IllegalStateException if the computation is terminated prematurely
 	 */
-	public Collection<Quad> canonize() throws RdfConsumerException {
+	public Collection<Quad> canonize() {
 
 		ticker.tick();
 
@@ -410,9 +406,9 @@ public final class RdfCanon implements RdfQuadConsumer {
 			entry.getValue().normalized = normalized;
 
 			if (normalized != null) {
-				final var quads = blankIdToQuadSet.get(entry.getKey());
-				if (quads != null && !quads.isEmpty()) {
-					blankQuads.addAll(quads);
+				final var relatedQuads = blankIdToQuadSet.get(entry.getKey());
+				if (relatedQuads != null && !relatedQuads.isEmpty()) {
+					blankQuads.addAll(relatedQuads);
 				}
 			}
 		});
