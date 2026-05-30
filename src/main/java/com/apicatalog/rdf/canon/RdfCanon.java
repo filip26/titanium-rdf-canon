@@ -240,7 +240,7 @@ public final class RdfCanon implements RdfQuadConsumer {
 	 * @return a collection of canonical RDF N-Quads
 	 * @throws IllegalStateException if the computation is terminated prematurely
 	 */
-	public Collection<Quad> canonize() {
+	Collection<Quad> canonize() {
 
 		ticker.tick();
 
@@ -397,10 +397,10 @@ public final class RdfCanon implements RdfQuadConsumer {
 
 	Collection<Quad> canonQuads() {
 
-		final var blankQuads = new HashSet<Quad>();
+		Set<Quad> blankQuads = null;
 
 		// relabel blank nodes
-		blankNodes.entrySet().forEach(entry -> {
+		for (var entry : blankNodes.entrySet()) {
 			final var normalized = canonIssuer.getIfExists(entry.getKey());
 
 			entry.getValue().normalized = normalized;
@@ -408,12 +408,18 @@ public final class RdfCanon implements RdfQuadConsumer {
 			if (normalized != null) {
 				final var relatedQuads = blankIdToQuadSet.get(entry.getKey());
 				if (relatedQuads != null && !relatedQuads.isEmpty()) {
-					blankQuads.addAll(relatedQuads);
+					if (blankQuads == null) {
+						blankQuads = new HashSet<>(relatedQuads);
+					} else {
+						blankQuads.addAll(relatedQuads);
+					}
 				}
 			}
-		});
+		}
 
-		blankQuads.forEach(Quad::updateIfBlanks);
+		if (blankQuads != null) {
+			blankQuads.forEach(Quad::updateIfBlanks);
+		}
 
 		final var sorted = new ArrayList<Quad>(quads);
 		sorted.sort((a, b) -> a.nquad.compareTo(b.nquad));
