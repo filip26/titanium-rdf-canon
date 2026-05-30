@@ -2,7 +2,7 @@
 
 An implementation of the [W3C Standard RDF Dataset Canonicalization Algorithm (RDFC 1.0)](https://www.w3.org/TR/rdf-canon/) in Java. 
 
-[![Java 8 CI](https://github.com/filip26/titanium-rdf-canon/actions/workflows/java8-build.yml/badge.svg)](https://github.com/filip26/titanium-rdf-canon/actions/workflows/java8-build.yml)
+[![Java 21 CI](https://github.com/filip26/titanium-rdf-canon/actions/workflows/java21-build.yml/badge.svg)](https://github.com/filip26/titanium-rdf-canon/actions/workflows/java8-build.yml)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/8682ccd0fb314ee8a237462c25373686)](https://app.codacy.com/gh/filip26/titanium-rdf-canon/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 [![Codacy Badge](https://app.codacy.com/project/badge/Coverage/8682ccd0fb314ee8a237462c25373686)](https://app.codacy.com/gh/filip26/titanium-rdf-canon/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_coverage)
 [![Maven Central](https://img.shields.io/maven-central/v/com.apicatalog/titanium-rdfc.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:com.apicatalog%20AND%20a:titanium-rdfc)
@@ -27,8 +27,7 @@ canon.quad(...).quad(..)...quad(...);
 canon.provide(...);
 
 // Get the canonicalized result as N-Quads
-var writer = new NQuadsWriter(...);
-canon.provide(writer);
+canon.provide(System.out::print);
 
 // Access data related to the canonicalization process
 var mapping = canon.mapping();
@@ -54,15 +53,9 @@ var canon = RdfCanon.create("SHA-256", () -> {
 <dependency>
     <groupId>com.apicatalog</groupId>
     <artifactId>titanium-rdfc</artifactId>
-    <version>2.0.0</version>
+    <version>3.0.0</version>
 </dependency>
 
-```
-
-### Gradle
-
-```gradle
-implementation("com.apicatalog:titanium-rdfc:2.0.0")
 ```
 
 ## Contributing

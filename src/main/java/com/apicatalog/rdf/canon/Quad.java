@@ -24,7 +24,7 @@ final class Quad {
         this.nquad = NQuadsWriter.nquad(subject, predicate, object, datatype, language, direction, graph);
     }
 
-    void update() {
+    void updateIfBlanks() {
         if ((blankSubject != null && blankSubject.normalized != null)
                 || (blankObject != null && blankObject.normalized != null)
                 || (blankGraph != null && blankGraph.normalized != null)) {

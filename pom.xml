@@ -7,7 +7,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.apicatalog</groupId>
     <artifactId>titanium-rdfc</artifactId>
-    <version>2.0.0</version>
+    <version>3.0.0</version>
     <packaging>jar</packaging>
 
     <name>Titanium RDF Dataset Canonicalization (RDFC 1.0)</name>
@@ -15,7 +15,8 @@
     <inceptionYear>2024</inceptionYear>
 
     <description>
-        An implementation of the W3C RDF Dataset Canonicalization Algorithm (RDFC 1.0)
+        An implementation of the W3C RDF Dataset Canonicalization Algorithm
+        (RDFC 1.0)
     </description>
 
     <url>https://github.com/filip26/titanium-rdf-canon</url>
@@ -48,8 +49,7 @@
     </developers>
 
     <properties>
-        <maven.compiler.target>8</maven.compiler.target>
-        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.release>21</maven.compiler.release>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -58,8 +58,8 @@
         <titanium.rdf.api.version>1.0.0</titanium.rdf.api.version>
         <titanium.rdf.nquads.version>1.0.2</titanium.rdf.nquads.version>
 
-        <!-- tests -->
-        <junit.version>5.14.4</junit.version>
+        <!-- Tests -->
+        <junit.version>6.1.0</junit.version>
         <jakarta.json.version>2.0.1</jakarta.json.version>
     </properties>
 
@@ -92,7 +92,7 @@
             <artifactId>jakarta.json</artifactId>
             <version>${jakarta.json.version}</version>
             <scope>test</scope>
-        </dependency>                
+        </dependency>
     </dependencies>
 
     <build>
@@ -178,32 +178,21 @@
                                 <goals>
                                     <goal>sign</goal>
                                 </goals>
-                                <configuration>
-                                    <signer>bc</signer>
-                                </configuration>                                
                             </execution>
                         </executions>
                     </plugin>
                     <plugin>
-                        <groupId>org.sonatype.plugins</groupId>
-                        <artifactId>nexus-staging-maven-plugin</artifactId>
-                        <version>1.7.0</version>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>0.10.0</version>
                         <extensions>true</extensions>
                         <configuration>
-                            <serverId>ossrh</serverId>
-                            <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                            <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                            <publishingServerId>central</publishingServerId>
+                            <autoPublish>true</autoPublish>
                         </configuration>
                     </plugin>
                 </plugins>
             </build>
-
-            <distributionManagement>
-                <snapshotRepository>
-                    <id>ossrh</id>
-                    <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-                </snapshotRepository>
-            </distributionManagement>
         </profile>
     </profiles>
 </project>
