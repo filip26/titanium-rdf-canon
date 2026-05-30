@@ -7,7 +7,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.apicatalog</groupId>
     <artifactId>titanium-rdfc</artifactId>
-    <version>2.0.0</version>
+    <version>3.0.0</version>
     <packaging>jar</packaging>
 
     <name>Titanium RDF Dataset Canonicalization (RDFC 1.0)</name>
@@ -48,8 +48,7 @@
     </developers>
 
     <properties>
-        <maven.compiler.target>8</maven.compiler.target>
-        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.release>21</maven.compiler.release>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -59,7 +58,7 @@
         <titanium.rdf.nquads.version>1.0.2</titanium.rdf.nquads.version>
 
         <!-- tests -->
-        <junit.version>5.14.4</junit.version>
+        <junit.version>6.1.0</junit.version>
         <jakarta.json.version>2.0.1</jakarta.json.version>
     </properties>
 
