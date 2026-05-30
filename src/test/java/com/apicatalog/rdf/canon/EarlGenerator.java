@@ -27,8 +27,8 @@ import java.util.stream.Stream;
 class EarlGenerator {
 
     static final String FILE_NAME = "titanium-rdf-canon-earl.ttl";
-    static final String VERSION = "2.0.0";
-    static final String RELEASE_DATE = "2025-03-09";
+    static final String VERSION = "3.0.0";
+    static final String RELEASE_DATE = "2026-05-30";
     static final String REPOSITORY = "https://github.com/filip26/titanium-rdf-canon";
 
     public static void main(String[] args) throws IOException {
