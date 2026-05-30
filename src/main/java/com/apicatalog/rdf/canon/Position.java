@@ -1,6 +1,5 @@
 package com.apicatalog.rdf.canon;
 
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Set;
 
@@ -57,7 +56,7 @@ enum Position {
 
         @Override
         public boolean isBlank(Quad quad) {
-            return quad.graph != null;
+            return quad.blankGraph != null;
         }
 
         void set(Quad quad, String value, Blank blank) {
@@ -91,7 +90,7 @@ enum Position {
     /**
      * Set of positions in a quad which can be blank.
      */
-    public static final Set<Position> CAN_BE_BLANK = Collections.unmodifiableSet(EnumSet.of(SUBJECT, OBJECT, GRAPH));
+    public static final Set<Position> CAN_BE_BLANK = Set.copyOf(EnumSet.of(SUBJECT, OBJECT, GRAPH));
 
     /**
      * The tag used to represent the position in hashes.
