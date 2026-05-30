@@ -27,8 +27,7 @@ canon.quad(...).quad(..)...quad(...);
 canon.provide(...);
 
 // Get the canonicalized result as N-Quads
-var writer = new NQuadsWriter(...);
-canon.provide(writer);
+canon.provide(System.out::print);
 
 // Access data related to the canonicalization process
 var mapping = canon.mapping();

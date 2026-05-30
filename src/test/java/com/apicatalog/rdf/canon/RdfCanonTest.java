@@ -22,7 +22,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 import com.apicatalog.rdf.api.RdfConsumerException;
 import com.apicatalog.rdf.nquads.NQuadsReader;
 import com.apicatalog.rdf.nquads.NQuadsReaderException;
-import com.apicatalog.rdf.nquads.NQuadsWriter;
 
 import jakarta.json.Json;
 import jakarta.json.JsonObject;
@@ -50,7 +49,7 @@ class RdfCanonTest {
         try {
             final StringWriter writer = new StringWriter();
 
-            canon.provide(new NQuadsWriter(writer));
+            canon.provide(writer::write);
 
             String expected = null;
 
