@@ -18,10 +18,13 @@ For conformance with the specification, refer to the [RDF Dataset Canonicalizati
 var canon = RdfCanon.create("SHA-256");
 
 // Feed the canonicalizer with N-Quads
-(new NQuadsReader(...)).provide(canon);
+try (var reader = new NQuadsReader(...)) {
+  reader.provide(canon);
+}
 
 // Alternatively, manually add quads
-canon.quad(...).quad(..)...quad(...);
+canon.quad(...);
+canon.quad(...);
 
 // Get the canonicalized result
 canon.provide(...);
@@ -53,7 +56,7 @@ var canon = RdfCanon.create("SHA-256", () -> {
 <dependency>
     <groupId>com.apicatalog</groupId>
     <artifactId>titanium-rdfc</artifactId>
-    <version>3.0.0</version>
+    <version>${rdfc.version}</version>
 </dependency>
 
 ```
