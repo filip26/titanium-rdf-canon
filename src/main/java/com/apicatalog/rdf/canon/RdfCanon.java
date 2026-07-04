@@ -216,8 +216,14 @@ public final class RdfCanon implements RdfQuadConsumer {
      * @throws IllegalStateException    if the computation is terminated prematurely
      */
     public void provide(final RdfQuadConsumer consumer) {
-        for (final var quad : canonize()) {
-            consumer.quad(quad.subject(), quad.predicate, quad.object(), quad.datatype, quad.language, quad.direction,
+        for (final var quad : canonizeQuads()) {
+            consumer.quad(
+                    quad.subject(),
+                    quad.predicate,
+                    quad.object(),
+                    quad.datatype,
+                    quad.language,
+                    quad.direction,
                     quad.graph());
         }
     }
@@ -230,7 +236,56 @@ public final class RdfCanon implements RdfQuadConsumer {
      * @throws IllegalStateException if the computation is terminated prematurely
      */
     public void provide(final Consumer<String> consumer) {
-        canonize().forEach(quad -> consumer.accept(quad.nquad));
+        canonizeQuads().forEach(quad -> consumer.accept(quad.nquad));
+    }
+
+    /**
+     * Canonicalize and emits RDF N-Quads quads.
+     *
+     * @param consumer the {@link RdfQuadConsumer} that will receive the canonical
+     *                 RDF quads
+     * @return the canonicalized quads
+     * @throws IllegalStateException if the computation is terminated prematurely
+     */
+    public String canonize(final RdfQuadConsumer consumer) {
+
+        var quads = canonizeQuads();
+
+        var c14n = new StringBuilder(quads.size() * 120);
+
+        for (final var quad : quads) {
+            consumer.quad(
+                    quad.subject(),
+                    quad.predicate,
+                    quad.object(),
+                    quad.datatype,
+                    quad.language,
+                    quad.direction,
+                    quad.graph());
+
+            c14n.append(quad.nquad);
+        }
+
+        return c14n.toString();
+    }
+
+    /**
+     * Canonicalizes RDF N-Quads into a canonical form.
+     *
+     * @return the canonicalized quads
+     * @throws IllegalStateException if the computation is terminated prematurely
+     */
+    public String canonize() {
+
+        var quads = canonizeQuads();
+
+        var c14n = new StringBuilder(quads.size() * 120);
+
+        for (final var quad : quads) {
+            c14n.append(quad.nquad);
+        }
+
+        return c14n.toString();
     }
 
     /**
@@ -239,7 +294,7 @@ public final class RdfCanon implements RdfQuadConsumer {
      * @return a collection of canonical RDF N-Quads
      * @throws IllegalStateException if the computation is terminated prematurely
      */
-    Collection<Quad> canonize() {
+    Collection<Quad> canonizeQuads() {
 
         ticker.tick();
 
