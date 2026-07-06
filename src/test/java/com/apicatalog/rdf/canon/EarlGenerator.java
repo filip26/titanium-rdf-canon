@@ -45,7 +45,7 @@ class EarlGenerator {
 
             tests.forEach(test -> {
                 try {
-                    RdfCanonTest.execute(RdfCanon.create(test.hashAlgorithm, new RdfCanonTimeTicker(300)), test);
+                    RdfCanonTest.execute(RdfCanon.newInstance(test.hashAlgorithm, new RdfCanonTimeTicker(300)), test);
                     printResult(writer, test.id, true);
 
                 } catch (Throwable e) {

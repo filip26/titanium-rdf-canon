@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.HexFormat;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -36,12 +37,6 @@ import com.apicatalog.rdf.nquads.NQuadsWriter;
  *      Canonicalization Algorithm</a>
  */
 public final class RdfCanon implements RdfQuadConsumer {
-
-    /**
-     * The lower-case hexadecimal alphabet.
-     */
-    private static final char[] HEX = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e',
-            'f' };
 
     private static final String BLANK_A = "_:a";
 
@@ -82,7 +77,7 @@ public final class RdfCanon implements RdfQuadConsumer {
     /** A set of non-normalized values. */
     private Set<String> nonNormalized;
 
-    RdfCanon(Map<String, Collection<Quad>> blankIdToQuadSet, Map<String, Blank> resources, MessageDigest digest,
+    private RdfCanon(Map<String, Collection<Quad>> blankIdToQuadSet, Map<String, Blank> resources, MessageDigest digest,
             Set<Quad> nquads, RdfCanonTicker ticker) {
         this.blankIdToQuadSet = blankIdToQuadSet;
         this.blankNodes = resources;
@@ -110,8 +105,8 @@ public final class RdfCanon implements RdfQuadConsumer {
      * @throws IllegalArgumentException if {@code hashAlgorithm} is not supported or
      *                                  {@code null}.
      */
-    public static RdfCanon create(String hashAlgorithm) {
-        return create(hashAlgorithm, RdfCanonTicker.EMPTY);
+    public static RdfCanon newInstance(String hashAlgorithm) {
+        return newInstance(hashAlgorithm, RdfCanonTicker.EMPTY);
     }
 
     /**
@@ -142,9 +137,9 @@ public final class RdfCanon implements RdfQuadConsumer {
      *                                  {@code null}.
      * @throws NullPointerException     if {@code ticker} is {@code null}.
      */
-    public static RdfCanon create(String hashAlgorithm, RdfCanonTicker ticker) {
+    public static RdfCanon newInstance(String hashAlgorithm, RdfCanonTicker ticker) {
         try {
-            return create(MessageDigest.getInstance(hashAlgorithm), ticker);
+            return newInstance(MessageDigest.getInstance(hashAlgorithm), ticker);
 
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException(hashAlgorithm + " is not available", e);
@@ -168,8 +163,8 @@ public final class RdfCanon implements RdfQuadConsumer {
      *         {@code digest}.
      * @throws NullPointerException if {@code digest} is {@code null}.
      */
-    public static RdfCanon create(MessageDigest digest) {
-        return create(digest, RdfCanonTicker.EMPTY);
+    public static RdfCanon newInstance(MessageDigest digest) {
+        return newInstance(digest, RdfCanonTicker.EMPTY);
     }
 
     /**
@@ -200,7 +195,7 @@ public final class RdfCanon implements RdfQuadConsumer {
      * @throws NullPointerException if {@code digest} or {@code ticker} is
      *                              {@code null}.
      */
-    public static RdfCanon create(MessageDigest digest, RdfCanonTicker ticker) {
+    public static RdfCanon newInstance(MessageDigest digest, RdfCanonTicker ticker) {
         return newInstance(new LinkedHashSet<>(), digest, ticker);
     }
 
@@ -240,36 +235,6 @@ public final class RdfCanon implements RdfQuadConsumer {
     }
 
     /**
-     * Canonicalize and emits RDF N-Quads quads.
-     *
-     * @param consumer the {@link RdfQuadConsumer} that will receive the canonical
-     *                 RDF quads
-     * @return the canonicalized quads
-     * @throws IllegalStateException if the computation is terminated prematurely
-     */
-    public String canonize(final RdfQuadConsumer consumer) {
-
-        var quads = canonizeQuads();
-
-        var c14n = new StringBuilder(quads.size() * 120);
-
-        for (final var quad : quads) {
-            consumer.quad(
-                    quad.subject(),
-                    quad.predicate,
-                    quad.object(),
-                    quad.datatype,
-                    quad.language,
-                    quad.direction,
-                    quad.graph());
-
-            c14n.append(quad.nquad);
-        }
-
-        return c14n.toString();
-    }
-
-    /**
      * Canonicalizes RDF N-Quads into a canonical form.
      *
      * @return the canonicalized quads
@@ -294,7 +259,7 @@ public final class RdfCanon implements RdfQuadConsumer {
      * @return a collection of canonical RDF N-Quads
      * @throws IllegalStateException if the computation is terminated prematurely
      */
-    Collection<Quad> canonizeQuads() {
+    private Collection<Quad> canonizeQuads() {
 
         ticker.tick();
 
@@ -339,11 +304,11 @@ public final class RdfCanon implements RdfQuadConsumer {
         quads.add(quad);
     }
 
-    static RdfCanon newInstance(final Set<Quad> nquads, final MessageDigest digest, final RdfCanonTicker ticker) {
+    private static RdfCanon newInstance(final Set<Quad> nquads, final MessageDigest digest, final RdfCanonTicker ticker) {
         return new RdfCanon(new HashMap<>(), new HashMap<>(), digest, nquads, ticker);
     }
 
-    String forBlank(Quad q0, String blankNodeId) {
+    private String forBlank(Quad q0, String blankNodeId) {
 
         String subject = q0.subject;
         if (q0.blankSubject != null) {
@@ -364,11 +329,11 @@ public final class RdfCanon implements RdfQuadConsumer {
         return NQuadsWriter.nquad(subject, q0.predicate, object, q0.datatype, q0.language, q0.direction, graph);
     }
 
-    void setNonNormalized() {
+    private void setNonNormalized() {
         nonNormalized = new HashSet<>(blankIdToQuadSet.keySet());
     }
 
-    String hashFirstDegree(final String blankNodeId) {
+    private String hashFirstDegree(final String blankNodeId) {
 
         Collection<Quad> related = blankIdToQuadSet.get(blankNodeId);
         String[] nQuads = new String[related.size()];
@@ -390,10 +355,10 @@ public final class RdfCanon implements RdfQuadConsumer {
         for (String s : nQuads) {
             digest.update(s.getBytes(StandardCharsets.UTF_8));
         }
-        return hex(digest.digest());
+        return HexFormat.of().formatHex(digest.digest());
     }
 
-    void issueSimpleIds() {
+    private void issueSimpleIds() {
         boolean simple = true;
         while (simple) {
             ticker.tick();
@@ -421,7 +386,7 @@ public final class RdfCanon implements RdfQuadConsumer {
         }
     }
 
-    void issueNDegreeIds() {
+    private void issueNDegreeIds() {
 
         for (final var entry : hashToBlankId.entrySet()) {
             final var hashPathList = new ArrayList<NDegreeResult>();
@@ -448,7 +413,7 @@ public final class RdfCanon implements RdfQuadConsumer {
         }
     }
 
-    Collection<Quad> canonQuads() {
+    private Collection<Quad> canonQuads() {
 
         Set<Quad> blankQuads = null;
 
@@ -479,26 +444,11 @@ public final class RdfCanon implements RdfQuadConsumer {
         return sorted;
     }
 
-    /**
-     * Convert bytes to hexadecimal.
-     *
-     * @param data the bytes
-     *
-     * @return the data represented in hexadecimal.
-     */
-    static String hex(byte[] data) {
-        StringBuilder builder = new StringBuilder(data.length * 2);
-        for (byte b : data) {
-            builder.append(HEX[(b & 0xf0) >> 4]).append(HEX[b & 0xf]);
-        }
-        return builder.toString();
-    }
-
-    NDegreeResult hashNDegreeQuads(String id, IdentifierIssuer issuer) {
+    private NDegreeResult hashNDegreeQuads(String id, IdentifierIssuer issuer) {
         return new HashNDegreeQuads().hash(id, issuer);
     }
 
-    void setResource(final Position position, final Quad quad, final String name) {
+    private void setResource(final Position position, final Quad quad, final String name) {
 
         Blank blank = null;
 
@@ -631,7 +581,7 @@ public final class RdfCanon implements RdfQuadConsumer {
          *
          * @return the result
          */
-        NDegreeResult hash(final String id, final IdentifierIssuer defaultIssuer) {
+        private NDegreeResult hash(final String id, final IdentifierIssuer defaultIssuer) {
 
             IdentifierIssuer issuer = defaultIssuer;
 
@@ -657,7 +607,7 @@ public final class RdfCanon implements RdfQuadConsumer {
             }
 
             digest.reset();
-            String hash = hex(digest.digest(dataToHash.toString().getBytes(StandardCharsets.UTF_8)));
+            String hash = HexFormat.of().formatHex(digest.digest(dataToHash.toString().getBytes(StandardCharsets.UTF_8)));
             return new NDegreeResult(hash, issuer);
         }
 
@@ -689,7 +639,7 @@ public final class RdfCanon implements RdfQuadConsumer {
                 digest.update(NQuadsWriter.resource(quad.predicate).getBytes(StandardCharsets.UTF_8));
             }
             digest.update(id.getBytes(StandardCharsets.UTF_8));
-            return hex(digest.digest());
+            return HexFormat.of().formatHex(digest.digest());
         }
     }
 }
