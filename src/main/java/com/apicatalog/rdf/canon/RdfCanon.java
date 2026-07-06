@@ -351,11 +351,10 @@ public final class RdfCanon implements RdfQuadConsumer {
         Arrays.sort(nQuads);
 
         // Create the hash
-        digest.reset();
         for (String s : nQuads) {
             digest.update(s.getBytes(StandardCharsets.UTF_8));
         }
-        return HexFormat.of().formatHex(digest.digest());
+        return HexFormat.of().withLowerCase().formatHex(digest.digest());
     }
 
     private void issueSimpleIds() {
@@ -606,8 +605,7 @@ public final class RdfCanon implements RdfQuadConsumer {
                 issuer = chosenIssuer;
             }
 
-            digest.reset();
-            String hash = HexFormat.of().formatHex(digest.digest(dataToHash.toString().getBytes(StandardCharsets.UTF_8)));
+            String hash = HexFormat.of().withLowerCase().formatHex(digest.digest(dataToHash.toString().getBytes(StandardCharsets.UTF_8)));
             return new NDegreeResult(hash, issuer);
         }
 
@@ -633,13 +631,12 @@ public final class RdfCanon implements RdfQuadConsumer {
             }
 
             // Create the hash of position, predicate and ID.
-            digest.reset();
             digest.update(position.tag());
             if (position != Position.GRAPH) {
                 digest.update(NQuadsWriter.resource(quad.predicate).getBytes(StandardCharsets.UTF_8));
             }
             digest.update(id.getBytes(StandardCharsets.UTF_8));
-            return HexFormat.of().formatHex(digest.digest());
+            return HexFormat.of().withLowerCase().formatHex(digest.digest());
         }
     }
 }
