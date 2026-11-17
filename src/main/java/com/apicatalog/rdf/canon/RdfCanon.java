@@ -105,8 +105,8 @@ public final class RdfCanon implements RdfQuadConsumer {
      * @throws IllegalArgumentException if {@code hashAlgorithm} is not supported or
      *                                  {@code null}.
      */
-    public static RdfCanon newInstance(String hashAlgorithm) {
-        return newInstance(hashAlgorithm, RdfCanonTicker.EMPTY);
+    public static RdfCanon create(String hashAlgorithm) {
+        return create(hashAlgorithm, RdfCanonTicker.EMPTY);
     }
 
     /**
@@ -137,9 +137,9 @@ public final class RdfCanon implements RdfQuadConsumer {
      *                                  {@code null}.
      * @throws NullPointerException     if {@code ticker} is {@code null}.
      */
-    public static RdfCanon newInstance(String hashAlgorithm, RdfCanonTicker ticker) {
+    public static RdfCanon create(String hashAlgorithm, RdfCanonTicker ticker) {
         try {
-            return newInstance(MessageDigest.getInstance(hashAlgorithm), ticker);
+            return create(MessageDigest.getInstance(hashAlgorithm), ticker);
 
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException(hashAlgorithm + " is not available", e);
@@ -163,8 +163,8 @@ public final class RdfCanon implements RdfQuadConsumer {
      *         {@code digest}.
      * @throws NullPointerException if {@code digest} is {@code null}.
      */
-    public static RdfCanon newInstance(MessageDigest digest) {
-        return newInstance(digest, RdfCanonTicker.EMPTY);
+    public static RdfCanon create(MessageDigest digest) {
+        return create(digest, RdfCanonTicker.EMPTY);
     }
 
     /**
@@ -195,8 +195,8 @@ public final class RdfCanon implements RdfQuadConsumer {
      * @throws NullPointerException if {@code digest} or {@code ticker} is
      *                              {@code null}.
      */
-    public static RdfCanon newInstance(MessageDigest digest, RdfCanonTicker ticker) {
-        return newInstance(new LinkedHashSet<>(), digest, ticker);
+    public static RdfCanon create(MessageDigest digest, RdfCanonTicker ticker) {
+        return create(new LinkedHashSet<>(), digest, ticker);
     }
 
     /**
@@ -285,7 +285,7 @@ public final class RdfCanon implements RdfQuadConsumer {
         quads.add(quad);
     }
 
-    private static RdfCanon newInstance(final Set<Quad> nquads, final MessageDigest digest,
+    private static RdfCanon create(final Set<Quad> nquads, final MessageDigest digest,
             final RdfCanonTicker ticker) {
         return new RdfCanon(new HashMap<>(), new HashMap<>(), digest, nquads, ticker);
     }
