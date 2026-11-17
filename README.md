@@ -5,7 +5,7 @@ An implementation of the [W3C Standard RDF Dataset Canonicalization Algorithm (R
 [![Java 21 CI](https://github.com/filip26/titanium-rdf-canon/actions/workflows/java21-build.yml/badge.svg)](https://github.com/filip26/titanium-rdf-canon/actions/workflows/java8-build.yml)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/8682ccd0fb314ee8a237462c25373686)](https://app.codacy.com/gh/filip26/titanium-rdf-canon/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 [![Codacy Badge](https://app.codacy.com/project/badge/Coverage/8682ccd0fb314ee8a237462c25373686)](https://app.codacy.com/gh/filip26/titanium-rdf-canon/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_coverage)
-[![Maven Central](https://img.shields.io/maven-central/v/com.apicatalog/titanium-rdfc.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:com.apicatalog%20AND%20a:titanium-rdfc)
+[![Maven Central](https://img.shields.io/maven-central/v/com.apicatalog/titanium-rdfc.svg?label=Maven%20Central)](https://mvnrepository.com/artifact/com.apicatalog/titanium-rdfc)
 [![javadoc](https://javadoc.io/badge2/com.apicatalog/titanium-rdfc/javadoc.svg)](https://javadoc.io/doc/com.apicatalog/titanium-rdfc)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
@@ -18,10 +18,13 @@ For conformance with the specification, refer to the [RDF Dataset Canonicalizati
 var canon = RdfCanon.create("SHA-256");
 
 // Feed the canonicalizer with N-Quads
-(new NQuadsReader(...)).provide(canon);
+try (var reader = new NQuadsReader(...)) {
+  reader.provide(canon);
+}
 
 // Alternatively, manually add quads
-canon.quad(...).quad(..)...quad(...);
+canon.quad(...);
+canon.quad(...);
 
 // Get the canonicalized result
 canon.provide(...);
@@ -53,7 +56,7 @@ var canon = RdfCanon.create("SHA-256", () -> {
 <dependency>
     <groupId>com.apicatalog</groupId>
     <artifactId>titanium-rdfc</artifactId>
-    <version>3.0.0</version>
+    <version>${rdfc.version}</version>
 </dependency>
 
 ```
