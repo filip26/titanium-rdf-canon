@@ -235,25 +235,6 @@ public final class RdfCanon implements RdfQuadConsumer {
     }
 
     /**
-     * Canonicalizes RDF N-Quads into a canonical form.
-     *
-     * @return the canonicalized quads
-     * @throws IllegalStateException if the computation is terminated prematurely
-     */
-    public String canonize() {
-
-        var quads = canonizeQuads();
-
-        var c14n = new StringBuilder(quads.size() * 120);
-
-        for (final var quad : quads) {
-            c14n.append(quad.nquad);
-        }
-
-        return c14n.toString();
-    }
-
-    /**
      * Canonicalizes RDF N-Quads into a canonical form and returns them.
      *
      * @return a collection of canonical RDF N-Quads
@@ -304,7 +285,8 @@ public final class RdfCanon implements RdfQuadConsumer {
         quads.add(quad);
     }
 
-    private static RdfCanon newInstance(final Set<Quad> nquads, final MessageDigest digest, final RdfCanonTicker ticker) {
+    private static RdfCanon newInstance(final Set<Quad> nquads, final MessageDigest digest,
+            final RdfCanonTicker ticker) {
         return new RdfCanon(new HashMap<>(), new HashMap<>(), digest, nquads, ticker);
     }
 
@@ -348,7 +330,7 @@ public final class RdfCanon implements RdfQuadConsumer {
         }
 
         // Sort the nQuads
-        Arrays.sort(nQuads);
+        Arrays.sort(nQuads, RdfCanon::compareUtf8);
 
         // Create the hash
         for (String s : nQuads) {
@@ -439,7 +421,7 @@ public final class RdfCanon implements RdfQuadConsumer {
         }
 
         final var sorted = new ArrayList<Quad>(quads);
-        sorted.sort((a, b) -> a.nquad.compareTo(b.nquad));
+        sorted.sort((a, b) -> compareUtf8(a.nquad, b.nquad));
         return sorted;
     }
 
@@ -605,7 +587,8 @@ public final class RdfCanon implements RdfQuadConsumer {
                 issuer = chosenIssuer;
             }
 
-            String hash = HexFormat.of().withLowerCase().formatHex(digest.digest(dataToHash.toString().getBytes(StandardCharsets.UTF_8)));
+            String hash = HexFormat.of().withLowerCase()
+                    .formatHex(digest.digest(dataToHash.toString().getBytes(StandardCharsets.UTF_8)));
             return new NDegreeResult(hash, issuer);
         }
 
@@ -638,5 +621,11 @@ public final class RdfCanon implements RdfQuadConsumer {
             digest.update(id.getBytes(StandardCharsets.UTF_8));
             return HexFormat.of().withLowerCase().formatHex(digest.digest());
         }
+    }
+
+    private static int compareUtf8(String a, String b) {
+        return Arrays.compareUnsigned(
+                a.getBytes(StandardCharsets.UTF_8),
+                b.getBytes(StandardCharsets.UTF_8));
     }
 }
