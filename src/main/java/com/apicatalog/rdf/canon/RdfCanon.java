@@ -287,7 +287,7 @@ public final class RdfCanon implements RdfQuadConsumer {
         } else {
             throw new IllegalArgumentException(
                     """
-                    Unexpected literal metadata (language tagged %s or directional %s) for object resource.
+                    Unexpected literal metadata (language %s or direction %s) for object resource.
                     """.formatted(language, direction));
         }
 
