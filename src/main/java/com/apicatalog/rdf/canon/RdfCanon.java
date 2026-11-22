@@ -262,21 +262,33 @@ public final class RdfCanon implements RdfQuadConsumer {
     }
 
     @Override
-    public void quad(String subject, String predicate, String object, String datatype, String language,
-            String direction, String graph) {
+    public void quad(
+            String subject,
+            String predicate,
+            String object,
+            String datatype,
+            String language,
+            String direction,
+            String graph) {
 
         Quad quad = new Quad();
         setResource(Position.SUBJECT, quad, subject);
         quad.predicate = predicate;
 
-        if (RdfQuadConsumer.isLiteral(datatype, language, direction)) {
+        if (RdfQuadConsumer.isObject(datatype, language, direction)) {
+            setResource(Position.OBJECT, quad, object);
+
+        } else if (RdfQuadConsumer.isLiteral(datatype, language, direction)) {
             quad.object = object;
             quad.datatype = datatype;
             quad.language = language;
             quad.direction = direction;
 
         } else {
-            setResource(Position.OBJECT, quad, object);
+            throw new IllegalArgumentException(
+                    """
+                    Unexpected literal metadata (language tagged %s or directional %s) for object resource.
+                    """.formatted(language, direction));
         }
 
         setResource(Position.GRAPH, quad, graph);
